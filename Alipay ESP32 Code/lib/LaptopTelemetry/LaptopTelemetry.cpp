@@ -1,7 +1,8 @@
 #include "LaptopTelemetry.h"
 
 WiFiUDP udp;
-IPAddress laptopIpAddress(192, 168, 86, 25);
+// IPAddress laptopIpAddress(192, 168, 86, 25);
+IPAddress laptopIpAddress(192, 168, 111, 171);
 
 LaptopTelemetry::LaptopTelemetry(const char* _ssid, const char* _pswrd, char* _packetBuffer) {
     ssid = _ssid;

@@ -7,8 +7,11 @@
 #include <Battery_Monitor.h>
 #include <melty.h> 
 
-const char *ssid = "RESNET-BROTECTED";
-const char *pswrd = "marbry2025";
+// const char *ssid = "RESNET-BROTECTED";
+// const char *pswrd = "marbry2025";
+
+const char *ssid = "EnVision-Local";
+const char *pswrd = "thinkmakebreak";
 
 const int packSize = 3;
 char packetBuffer[packSize];
@@ -20,7 +23,7 @@ melty alipay = melty();
 
 void setup()
 {
-  delay(750); // Some reason my aliexpress esp32s3 needs this delay to give it enough time to initialize
+  // delay(750); // Some reason my aliexpress esp32s3 needs this delay to give it enough time to initialize
   init_led();
   init_mpu6050();
   init_motors();
