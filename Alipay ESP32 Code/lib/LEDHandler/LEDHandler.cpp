@@ -7,7 +7,7 @@ unsigned long currentDelayToggle = millis();
 
 
 void init_led() {
-    FastLED.addLeds<WS2812B, 48, GRB>(leds, 1).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<WS2812B, 4, GRB>(leds, 1).setCorrection(TypicalLEDStrip);
 }
 
 void setLeds(CRGB color)
