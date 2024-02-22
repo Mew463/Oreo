@@ -6,18 +6,18 @@ from LaptopKeyboard import *
 # myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
 # myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
 
-# myAlipay = Alipay("192.168.111.171", 12346, "ALIPAY")
-# myIRBeacon = Alipay("192.168.111.178", 12347, "IRBeac1")
+myAlipay = Alipay("192.168.111.171", 12346, "ALIPAY")
+myIRBeacon = Alipay("192.168.111.178", 12347, "IRBeac1")
 
-myAlipay = Alipay("192.168.175.221", 12346, "ALIPAY")
+# myAlipay = Alipay("192.168.175.221", 12346, "ALIPAY")
 # myIRBeacon = Alipay("192.168.175.195", 12347, "IRBeac1")
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
 receiver_thread1 = threading.Thread(target=myAlipay.udp_receiver)
-# receiver_thread2 = threading.Thread(target=myIRBeacon.udp_receiver)
+receiver_thread2 = threading.Thread(target=myIRBeacon.udp_receiver)
 
 receiver_thread1.start()
-# receiver_thread2.start()
+receiver_thread2.start()
 keyboard_thread.start()  
 
 drivecmd = 0
@@ -68,8 +68,8 @@ while (True):
         waitForRelease = 0
         
     cmd = f"{drivecmd}{enabled}"
-    print(cmd)
+    # print(cmd)
+    myIRBeacon.send_udp_packet(f"{enabled}")
     myAlipay.send_udp_packet(cmd)
-    # myIRBeacon.send_udp_packet(f"{enabled}")
     time.sleep(0.05)                
-                              
+                                

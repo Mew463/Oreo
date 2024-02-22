@@ -8,11 +8,11 @@
 // const char *ssid = "RESNET-BROTECTED";
 // const char *pswrd = "marbry2025";
 
-// const char *ssid = "EnVision-Local";
-// const char *pswrd = "thinkmakebreak";
+const char *ssid = "EnVision-Local";
+const char *pswrd = "thinkmakebreak";
 
-const char *ssid = "AlipayDevices";
-const char *pswrd = "alipay123";
+// const char *ssid = "AlipayDevices";
+// const char *pswrd = "alipay123";
 
 const int packSize = 3;
 char packetBuffer[packSize];
@@ -24,8 +24,6 @@ const int freq = 38000;
 const int ledChannel = 0;
 const int resolution = 8;
 
-char lastEnabledCmd = '0';
- 
 void setup(){
   init_led();
   USBSerial.begin(115200);
@@ -53,11 +51,6 @@ void loop(){
       toggleLeds(CRGB::Red, CRGB::Green, 500);
       ledcWrite(ledChannel, 0);
     }
-
-    if (packetBuffer[2] == '1') // Sync led toggling
-      syncToggle();
-
   }
 
-  lastEnabledCmd = packetBuffer[0];
 }
