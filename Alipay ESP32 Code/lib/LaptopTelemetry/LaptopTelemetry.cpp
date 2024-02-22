@@ -42,7 +42,7 @@ void LaptopTelemetry::init() {
 }
 
 void LaptopTelemetry::send(const char* message) {
-    udp.beginPacket(laptopIpAddress, 12346); // Send to port 12346 
+    udp.beginPacket(laptopIpAddress, PORT); // Send to port 12346 
     udp.print(message);
     udp.endPacket();
 }

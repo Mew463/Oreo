@@ -1,18 +1,18 @@
 #include "LEDHandler.h"
 
-CRGB leds[1];
 bool ledToggleState = 0;
 unsigned long lastdelayToggle = millis();
 unsigned long currentDelayToggle = millis();
 
+CRGB leds[1];
 
 void init_led() {
-    FastLED.addLeds<WS2812B, 4, GRB>(leds, 1).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<WS2812B, LEDPIN, GRB>(leds, 1).setCorrection(TypicalLEDStrip);
 }
 
 void setLeds(CRGB color)
 {
-    fill_solid(leds, 1, color);
+    leds[0] = color;
     FastLED.show();
 }
 

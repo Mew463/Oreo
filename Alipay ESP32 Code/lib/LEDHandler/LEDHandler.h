@@ -1,5 +1,11 @@
 #include <FastLED.h>
 
+#ifdef IR_BEACON
+    #define LEDPIN 5
+#else
+    #define LEDPIN 4
+#endif
+
 void init_led();
 
 void setLeds(CRGB color);
