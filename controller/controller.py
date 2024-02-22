@@ -3,11 +3,15 @@ import threading
 from AlipayTelemetry import *
 from LaptopKeyboard import *
 
-myAlipay = Alipay("192.168.111.177")
-    
+myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
+myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
+
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
-receiver_thread = threading.Thread(target=myAlipay.udp_receiver)
-receiver_thread.start()
+receiver_thread1 = threading.Thread(target=myAlipay.udp_receiver)
+receiver_thread2 = threading.Thread(target=myIRBeacon.udp_receiver)
+
+receiver_thread1.start()
+receiver_thread2.start()
 keyboard_thread.start()  
 
 drivecmd = 0
@@ -19,11 +23,11 @@ print(f"IP : {myAlipay.get_laptop_ip()}")
 while (True):
     if get_key_state(Key.up):
         drivecmd = 1
-    elif get_key_state(Key.right):
+    elif get_key_state(Key.left):
         drivecmd = 2
     elif get_key_state(Key.down):
         drivecmd = 3
-    elif get_key_state(Key.left):
+    elif get_key_state(Key.right):
         drivecmd = 4
     else:
         drivecmd = 0
@@ -40,6 +44,6 @@ while (True):
         
     cmd = f"{drivecmd}{enabled}"
     myAlipay.send_udp_packet(cmd)
-    # print(f"Command: {cmd}")
+    myIRBeacon.send_udp_packet(f"{enabled}")
     time.sleep(0.05)                
                               

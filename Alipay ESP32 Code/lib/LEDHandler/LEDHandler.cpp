@@ -16,6 +16,10 @@ void setLeds(CRGB color)
     FastLED.show();
 }
 
+void syncToggle() {
+    lastdelayToggle = millis();
+}
+
 void toggleLeds(CRGB color1, CRGB color2, int delayMS) {
     currentDelayToggle = millis();
     if (currentDelayToggle - lastdelayToggle > delayMS) {

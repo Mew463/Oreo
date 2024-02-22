@@ -17,6 +17,8 @@ const int IRLedPin = 4;
 const int freq = 38000;
 const int ledChannel = 0;
 const int resolution = 8;
+
+char lastEnabledCmd = '0';
  
 void setup(){
   init_led();
@@ -32,8 +34,24 @@ void setup(){
 }
  
 void loop(){
-  setLeds(CRGB::Red);
-  delay(250);
-  // ledcWrite(ledChannel, 80);
-  // delay(100);
+  myLaptop.receive();
+
+  if (myLaptop.isDisconnected()) {
+    setLeds(CRGB::Orange);
+  } else {
+    if (packetBuffer[0] == '1' && lastEnabledCmd == '0') { // Enabled
+      toggleLeds(CRGB::Blue, CRGB::Purple, 500);
+      ledcWrite(ledChannel, 100);
+    } 
+    if (packetBuffer[0] == '0') {    // Disabled
+      toggleLeds(CRGB::Red, CRGB::Green, 500);
+      ledcWrite(ledChannel, 0);
+    }
+
+    if (packetBuffer[2] == '1') // Sync led toggling
+      syncToggle();
+
+  }
+
+  lastEnabledCmd = packetBuffer[0];
 }

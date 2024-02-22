@@ -7,11 +7,11 @@
 #include <Battery_Monitor.h>
 #include <melty.h> 
 
-// const char *ssid = "RESNET-BROTECTED";
-// const char *pswrd = "marbry2025";
+const char *ssid = "RESNET-BROTECTED";
+const char *pswrd = "marbry2025";
 
-const char *ssid = "EnVision-Local";
-const char *pswrd = "thinkmakebreak";
+// const char *ssid = "EnVision-Local";
+// const char *pswrd = "thinkmakebreak";
 
 const int packSize = 3;
 char packetBuffer[packSize];
@@ -42,24 +42,30 @@ void loop()
     set_both_motors(0);
     setLeds(CRGB::Orange);
   } else {
-    if (packetBuffer[1] == '1') {
-      alipay.updateRPM();
-
-      EVERY_N_MILLIS(100) {
-        myLaptop.send(alipay.RPM);
+    if (packetBuffer[1] == '1') { // Currently enabled
+      alipay.update();
+      if (alipay.translate()) {
+        l_motor_write(8-5);
+        r_motor_write(8+5);
+      } else {
+        set_both_motors(8);
       }
       
-      if (packetBuffer[0] == '1') {
-        set_both_motors(5);
-      }
+      if (packetBuffer[0] == '1') // Check drive cmd
+        alipay.deg = 0;
       else if (packetBuffer[0] == '2')
-        set_both_motors(7);
+        alipay.deg = 90;
       else if (packetBuffer[0] == '3')
-        set_both_motors(9);
+        alipay.deg = 180;
       else if (packetBuffer[0] == '4')
-        set_both_motors(12);
-      // else
-      //   setLeds(CRGB::Black);
+        alipay.deg = 270;
+      
+      if (packetBuffer[0] != '0') {// Check drive cmd
+        alipay.percentageOfRotation = 0.5;
+      } else {
+        alipay.percentageOfRotation = 0.00;
+      }
+
     } else {
       toggleLeds(CRGB::Red, CRGB::Green, 500);
       set_both_motors(0); 
