@@ -5,8 +5,14 @@
 #include <Battery_Monitor.h>
 #include <LaptopTelemetry.h>
 
-const char *ssid = "RESNET-BROTECTED";
-const char *pswrd = "marbry2025";
+// const char *ssid = "RESNET-BROTECTED";
+// const char *pswrd = "marbry2025";
+
+// const char *ssid = "EnVision-Local";
+// const char *pswrd = "thinkmakebreak";
+
+const char *ssid = "AlipayDevices";
+const char *pswrd = "alipay123";
 
 const int packSize = 3;
 char packetBuffer[packSize];
@@ -37,9 +43,9 @@ void loop(){
   myLaptop.receive();
 
   if (myLaptop.isDisconnected()) {
-    setLeds(CRGB::Orange);
+    toggleLeds(CRGB::Red, CRGB::Black, 500);
   } else {
-    if (packetBuffer[0] == '1' && lastEnabledCmd == '0') { // Enabled
+    if (packetBuffer[0] == '1') { // Enabled
       toggleLeds(CRGB::Blue, CRGB::Purple, 500);
       ledcWrite(ledChannel, 100);
     } 

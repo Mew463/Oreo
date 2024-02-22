@@ -4,9 +4,6 @@
     #define PORT 12346
 #endif
 
-// #ifdef WIFI_SETTINGS 0
-
-
 #include <WiFiUdp.h>
 #include <WiFi.h>
 

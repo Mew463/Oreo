@@ -1,8 +1,9 @@
 #include "LaptopTelemetry.h"
 
 WiFiUDP udp;
-IPAddress laptopIpAddress(192, 168, 86, 25);
+// IPAddress laptopIpAddress(192, 168, 86, 25);
 // IPAddress laptopIpAddress(192, 168, 111, 171);
+IPAddress laptopIpAddress(192, 168, 175, 127);
 
 LaptopTelemetry::LaptopTelemetry(const char* _ssid, const char* _pswrd, char* _packetBuffer) {
     ssid = _ssid;
@@ -42,7 +43,7 @@ void LaptopTelemetry::init() {
 }
 
 void LaptopTelemetry::send(const char* message) {
-    udp.beginPacket(laptopIpAddress, PORT); // Send to port 12346 
+    udp.beginPacket(laptopIpAddress, PORT); // Send to port 
     udp.print(message);
     udp.endPacket();
 }
@@ -60,7 +61,7 @@ bool LaptopTelemetry::isDisconnected() {
 void LaptopTelemetry::receive() {
     size_t packetSize = udp.parsePacket();
     if (packetSize) { // receive incoming UDP packets
-        // USBSerial.printf("Received %d bytes from %s, port %d\n", packetSize, udp.remoteIP().toString().c_str(), udp.remotePort());
+        USBSerial.printf("Received %d bytes from %s, port %d\n", packetSize, udp.remoteIP().toString().c_str(), udp.remotePort());
         int len = udp.read(packetBuffer, packetSize);
         if (len > 0)
             packetBuffer[len] = 0;

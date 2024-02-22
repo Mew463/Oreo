@@ -11,13 +11,13 @@ void melty::update() {
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
             setLeds(CRGB::Green);
             currentPulse = millis();
-            unsigned long deltaPulse = currentPulse - lastPulse; // How long it takes to complete one revolution
-            RPM = 60000/(deltaPulse);
+            unsigned long period_MS = currentPulse - lastPulse; // How long it takes to complete one revolution
+            RPM = 60000/(period_MS);
             lastPulse = currentPulse;
 
-            unsigned long midPulse = currentPulse + pulseWidth/2; // This should ideally be centered on the beacon 
-            unsigned long centerOfDrivePulse =  midPulse + (float(deg)/360)*deltaPulse; // Direction that we should be driving towards
-            unsigned long deltaDriveTiming = (percentageOfRotation * deltaPulse)/2;
+            unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
+            unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*period_MS; // Direction that we should be driving towards
+            unsigned long deltaDriveTiming = (percentageOfRotation * period_MS)/2;
             if (timingToggle) { // If it is going to translate whilst computing the new timings we should use a different set of variables
                 endDrive = centerOfDrivePulse + deltaDriveTiming;
                 startDrive = centerOfDrivePulse - deltaDriveTiming;
@@ -28,15 +28,15 @@ void melty::update() {
 
             timingToggle = !timingToggle; // Toggle it so that next iteration uses different variables 
         }
-        else {
+        else { // Activates on the falling edge of seeing the IR LED
             setLeds(CRGB::Red);
-            pulseWidth = millis() - lastPulse;
+            time_seen_beacon = millis() - lastPulse;
         }
 
     lastSeenIRLed = curSeenIRLed;
 }
 
-bool melty::translate() {
+bool melty::translate() { // Returns whether or not robot should translate now
     unsigned long currentTime = millis();
     if (percentageOfRotation != 0)
         return (currentTime > startDrive && currentTime < endDrive || currentTime > startDrive2 && currentTime < endDrive2);

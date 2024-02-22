@@ -18,7 +18,7 @@ class melty {
         bool lastSeenIRLed = 0;
         unsigned long currentPulse = millis();
         unsigned long lastPulse = millis();
-        unsigned long pulseWidth = millis();
+        unsigned long time_seen_beacon = millis();
 
         bool IRLedReadings[IRLedDataSize] = {0};
         int IRLedIndex = 0;

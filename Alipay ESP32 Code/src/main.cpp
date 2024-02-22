@@ -7,11 +7,14 @@
 #include <Battery_Monitor.h>
 #include <melty.h> 
 
-const char *ssid = "RESNET-BROTECTED";
-const char *pswrd = "marbry2025";
+// const char *ssid = "RESNET-BROTECTED";
+// const char *pswrd = "marbry2025";
 
 // const char *ssid = "EnVision-Local";
 // const char *pswrd = "thinkmakebreak";
+
+const char *ssid = "AlipayDevices";
+const char *pswrd = "alipay123";
 
 const int packSize = 3;
 char packetBuffer[packSize];
@@ -23,7 +26,7 @@ melty alipay = melty();
 
 void setup()
 {
-  // delay(750); // Some reason my aliexpress esp32s3 needs this delay to give it enough time to initialize
+  delay(750); // Some reason my aliexpress esp32s3 needs this delay to give it enough time to initialize
   init_led();
   init_mpu6050();
   init_motors();
@@ -37,10 +40,9 @@ void setup()
 void loop()
 {
   myLaptop.receive();
-  
   if (myLaptop.isDisconnected()) {
     set_both_motors(0);
-    setLeds(CRGB::Orange);
+    toggleLeds(CRGB::Red, CRGB::Black, 500);
   } else {
     if (packetBuffer[1] == '1') { // Currently enabled
       alipay.update();
@@ -50,16 +52,34 @@ void loop()
       } else {
         set_both_motors(8);
       }
-      
-      if (packetBuffer[0] == '1') // Check drive cmd
-        alipay.deg = 0;
-      else if (packetBuffer[0] == '2')
-        alipay.deg = 90;
-      else if (packetBuffer[0] == '3')
-        alipay.deg = 180;
-      else if (packetBuffer[0] == '4')
-        alipay.deg = 270;
-      
+
+      switch (packetBuffer[0]) { // Check the drive cmd
+      case '1':
+        alipay.deg = 0; 
+        break;
+      case '2':
+        alipay.deg = 45; 
+        break;
+      case '3':
+        alipay.deg = 90; 
+        break;
+      case '4':
+        alipay.deg = 135; 
+        break;
+      case '5':
+        alipay.deg = 180; 
+        break;
+      case '6':
+        alipay.deg = 225; 
+        break;
+      case '7':
+        alipay.deg = 270; 
+        break;
+      case '8':
+        alipay.deg = 315; 
+        break;
+      }
+
       if (packetBuffer[0] != '0') {// Check drive cmd
         alipay.percentageOfRotation = 0.5;
       } else {
