@@ -3,11 +3,11 @@ import threading
 from AlipayTelemetry import *
 from LaptopKeyboard import *
 
-# myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
-# myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
+myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
+myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
 
-myAlipay = Alipay("192.168.111.171", 12346, "ALIPAY")
-myIRBeacon = Alipay("192.168.111.178", 12347, "IRBeac1")
+# myAlipay = Alipay("192.168.111.171", 12346, "ALIPAY")
+# myIRBeacon = Alipay("192.168.111.178", 12347, "IRBeac1")
 
 # myAlipay = Alipay("192.168.175.221", 12346, "ALIPAY")
 # myIRBeacon = Alipay("192.168.175.195", 12347, "IRBeac1")

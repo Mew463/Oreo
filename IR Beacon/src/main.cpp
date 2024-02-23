@@ -5,11 +5,11 @@
 #include <Battery_Monitor.h>
 #include <LaptopTelemetry.h>
 
-// const char *ssid = "RESNET-BROTECTED";
-// const char *pswrd = "marbry2025";
+const char *ssid = "RESNET-BROTECTED";
+const char *pswrd = "marbry2025";
 
-const char *ssid = "EnVision-Local";
-const char *pswrd = "thinkmakebreak";
+// const char *ssid = "EnVision-Local";
+// const char *pswrd = "thinkmakebreak";
 
 // const char *ssid = "AlipayDevices";
 // const char *pswrd = "alipay123";

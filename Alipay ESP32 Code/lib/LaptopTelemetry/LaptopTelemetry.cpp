@@ -1,8 +1,8 @@
 #include "LaptopTelemetry.h"
 
 WiFiUDP udp;
-// IPAddress laptopIpAddress(192, 168, 86, 25);
-IPAddress laptopIpAddress(192, 168, 111, 177);
+IPAddress laptopIpAddress(192, 168, 86, 25);
+// IPAddress laptopIpAddress(192, 168, 111, 177);
 // IPAddress laptopIpAddress(192, 168, 175, 127);
 
 LaptopTelemetry::LaptopTelemetry(const char* _ssid, const char* _pswrd, char* _packetBuffer) {
@@ -16,27 +16,27 @@ void LaptopTelemetry::init() {
     WiFi.begin(ssid, pswrd);
     WiFi.setTxPower(WIFI_POWER_8_5dBm);
     wl_status_t wifistat = WiFi.status();
-    while (wifistat != WL_CONNECTED)
-    {
+    while (wifistat != WL_CONNECTED) {
         wifistat = WiFi.status();
         switch (wifistat) {
-        case WL_NO_SSID_AVAIL:
+    case WL_NO_SSID_AVAIL:
         USBSerial.println("[WiFi] SSID not found");
         break;
-        case WL_CONNECT_FAILED:
+    case WL_CONNECT_FAILED:
         USBSerial.print("[WiFi] Failed - WiFi not connected! Reason: ");
         break;
-        case WL_CONNECTION_LOST:
+    case WL_CONNECTION_LOST:
         USBSerial.println("[WiFi] Connection was lost");
         break;
-        case WL_CONNECTED:
+    case WL_CONNECTED:
         USBSerial.println("[WiFi] WiFi is connected!");
         USBSerial.print("[WiFi] IP address: ");
         USBSerial.println(WiFi.localIP());
         udp.begin(12345); // Port that ESP32 will receive commands on 
         break;
-        default:
+    default:
         USBSerial.print(".");
+        break;
         }
         delay(100);
     }
