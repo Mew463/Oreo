@@ -1,0 +1,9 @@
+import asyncio
+from bleak import discover
+
+async def scan():
+    devices = await discover()
+    for device in devices:
+        print(device)
+
+asyncio.run(scan())

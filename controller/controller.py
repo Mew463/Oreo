@@ -3,14 +3,14 @@ import threading
 from AlipayTelemetry import *
 from LaptopKeyboard import *
 
-myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
-myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
+# myAlipay = Alipay("192.168.86.22", 12346, "ALIPAY")
+# myIRBeacon = Alipay("192.168.86.27", 12347, "IRBeac1")
 
 # myAlipay = Alipay("192.168.111.171", 12346, "ALIPAY")
 # myIRBeacon = Alipay("192.168.111.178", 12347, "IRBeac1")
 
-# myAlipay = Alipay("192.168.175.221", 12346, "ALIPAY")
-# myIRBeacon = Alipay("192.168.175.195", 12347, "IRBeac1")
+myAlipay = Alipay("192.168.175.221", 12346, "ALIPAY")
+myIRBeacon = Alipay("192.168.175.195", 12347, "IRBeac1")
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
 receiver_thread1 = threading.Thread(target=myAlipay.udp_receiver)
