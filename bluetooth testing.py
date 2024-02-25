@@ -69,8 +69,8 @@ async def main():
 
         for i in range(3):
             msg = await uart.read()
-            # msg = msg.decode()
+            msg = msg.decode('utf-8')
             print("received", msg)
-            await uart.write(f"echo {msg}")
+            await uart.write(f"{msg}")
 
 asyncio.run(main())

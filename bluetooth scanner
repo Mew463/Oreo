@@ -1,9 +1,10 @@
 import asyncio
-from bleak import discover
+from bleak import BleakScanner
 
 async def scan():
-    devices = await discover()
+    devices = await BleakScanner.discover(timeout=1)
     for device in devices:
-        print(device)
+        if device.name is not None:
+            print(device)
 
 asyncio.run(scan())

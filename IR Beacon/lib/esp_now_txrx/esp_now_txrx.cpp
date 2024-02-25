@@ -1,0 +1,47 @@
+#include <esp_now_txrx.h>
+
+esp_now_peer_info_t peerInfo;
+
+ESP_NOW_TXRX::ESP_NOW_TXRX(uint8_t* _receiver_address, int _packetSize) {
+    memcpy(peerInfo.peer_addr, _receiver_address, 6);
+    receiver_address = _receiver_address;
+    // packetBuffer = _packetBuffer;
+    packetSize = _packetSize;
+}
+
+void ESP_NOW_TXRX::getMacAddress() {
+    USBSerial.println(WiFi.macAddress());
+}
+
+void ESP_NOW_TXRX::send(const uint8_t *bytes) {
+    esp_now_send(receiver_address, bytes, packetSize);
+}
+
+void ESP_NOW_TXRX::init(esp_now_recv_cb_t receiv_cb) {
+    WiFi.mode(WIFI_STA);
+    if (esp_now_init() != ESP_OK) {
+        USBSerial.println("Error initializing ESP-NOW");
+        return;
+    }
+    int x = 10;
+    esp_now_register_recv_cb(receiv_cb); //(const uint8_t *mac, const uint8_t *incomingData, int len);
+        // memcpy(this->packetBuffer, incomingData, len);
+        // x = 3;
+        // USBSerial.print("Bytes received: ");
+        // USBSerial.println(len);
+        // USBSerial.print("Message: ");
+
+        // for (int i = 0; i < len; i++) 
+        //     USBSerial.print(incomingData[i]);
+        // USBSerial.println();
+    
+
+    // memcpy(peerInfo.peer_addr, receiver_address, 6);
+    peerInfo.channel = 0;  
+    peerInfo.encrypt = false;
+
+    if (esp_now_add_peer(&peerInfo) != ESP_OK){
+        USBSerial.println("Failed to add peer");
+        return;
+    }
+}
