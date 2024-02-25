@@ -7,6 +7,7 @@ melty::melty() {
 
 void melty::update() {
     bool curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
+    // USBSerial.println(digitalRead(TOP_IR_PIN));
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
             setLeds(CRGB::Green);
@@ -45,6 +46,11 @@ bool melty::translate() { // Returns whether or not robot should translate now
 }
 
 bool melty::isBeaconSensed(bool currentReading) {
+    
+    for (int i = 0; i < IRLedDataSize; i++)
+        USBSerial.print(IRLedReadings[i]);
+    USBSerial.println();
+
     IRLedReadings[IRLedIndex++] = currentReading; // This is just code for a ring buffer
     if (IRLedIndex == IRLedDataSize)
         IRLedIndex = 0;

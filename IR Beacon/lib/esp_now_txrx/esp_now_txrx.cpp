@@ -8,7 +8,7 @@ ESP_NOW_TXRX::ESP_NOW_TXRX(uint8_t* _receiver_address, int _packetSize) {
     packetSize = _packetSize;
 }
 
-void ESP_NOW_TXRX::getMacAddress() {
+void ESP_NOW_TXRX::getMyMacAddress() {
     USBSerial.println(WiFi.macAddress());
 }
 
@@ -31,4 +31,12 @@ void ESP_NOW_TXRX::init(esp_now_recv_cb_t receiv_cb) {
         USBSerial.println("Failed to add peer");
         return;
     }
+}
+
+bool ESP_NOW_TXRX::isDisconnected() {
+    return millis() - lastMessage > 500;
+}
+
+void ESP_NOW_TXRX::keepAlive() {
+    lastMessage = millis();
 }

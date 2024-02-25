@@ -3,7 +3,7 @@
 
 #define TOP_IR_PIN     10
 #define BOTTOM_IR_PIN   9
-#define IRLedDataSize   50
+#define IRLedDataSize   10
 
 class melty {
     public:

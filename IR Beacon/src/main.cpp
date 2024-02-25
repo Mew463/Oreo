@@ -30,7 +30,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
 BLE_Uart myBLEUart = BLE_Uart(laptop_packetBuffer, packSize);
 
-uint8_t mac_addy[] = {0x48, 0x27, 0xE2, 0xD2, 0xC3, 0x94};
+uint8_t mac_addy[] = {0xF4, 0x12, 0xFA, 0x6A, 0x0F, 0x64};
 ESP_NOW_TXRX Alipay = ESP_NOW_TXRX(mac_addy,packSize);
 struct_message myData;
 
@@ -45,19 +45,18 @@ void setup(){
   Alipay.init(OnDataRecv);
   myBLEUart.init_ble();
   setLeds(CRGB::Black);
+  // delay(1000);
+  // Alipay.getMyMacAddress();
   
-}
-
-uint8_t charToByte(char *letter) {
-  return byte(atoi(letter));
 }
  
 void loop(){
   if (myBLEUart.isConnected()) {
     strcpy(myData.a, laptop_packetBuffer);
+    delay(100);
     Alipay.send(myData);
 
-    if (laptop_packetBuffer[0] == '0') {// Robot is disabled
+    if (myData.a[0] == '0') {// Robot is disabled
       toggleLeds(CRGB::Red, CRGB::Green, 500);
       ledcWrite(ledChannel, 0);
     } else {
@@ -69,12 +68,4 @@ void loop(){
     toggleLeds(CRGB::Red, CRGB::Black, 500);
     ledcWrite(ledChannel, 0);
   }
-  // delay(100);
-  // strcpy(myData.a, "123456");
-  // // myData.a = "123456";
-  // // char* ptr = laptop_packetBuffer[0];
-  // // USBSerial.println(byte('0'));
-  // // mydata[0] = 
-  // Alipay.send(myData);
-  
 }

@@ -4,6 +4,7 @@ from LaptopKeyboard import *
 from bluetooth import *
 
 uart = BLE_UART(peripheral_name='ESP32_BLE')
+alipay = BLE_UART(peripheral_name='Alipay')
 
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
@@ -12,13 +13,14 @@ keyboard_thread.start()
 
 async def main():
     await uart.connect()
+    await alipay.connect()
     drivecmd = 0
     enabled = 0
     waitForRelease = 0
     while (True):
-        y = 0
+        y = 0  
         x = 0
-        if get_key_state(Key.up):
+        if get_key_state(Key.up): 
             y = y + 1
         if get_key_state(Key.down):
             y = y - 1
