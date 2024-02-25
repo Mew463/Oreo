@@ -5,23 +5,24 @@
 #include <Drive_Motors.h>
 #include <Battery_Monitor.h>
 #include <melty.h> 
-#include <esp_now_txrx.h>
+#include <BLE_Uart.h>
 
 const int packSize = 6;
-// char esp_now_packetBuffer[packSize];
+char laptop_packetBuffer[packSize] = {};
+
+BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 
 melty alipay = melty();
 
-uint8_t mac_addy[] = {0xF4, 0x12, 0xFA, 0x6A, 0xA5, 0xB4};
-ESP_NOW_TXRX IRBeacon = ESP_NOW_TXRX(mac_addy,packSize);
-struct_message myData;
+// uint8_t mac_addy[] = {0xF4, 0x12, 0xFA, 0x6A, 0xA5, 0xB4};
+// ESP_NOW_TXRX IRBeacon = ESP_NOW_TXRX(mac_addy,packSize);
+// struct_message myData;
 
 // Callback when data is received
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-    IRBeacon.keepAlive();
-    memcpy(&myData, incomingData, packSize);
-
-}
+// void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+//     IRBeacon.keepAlive();
+//     memcpy(&myData, incomingData, packSize);
+// }
 
 
 void setup()
@@ -34,8 +35,9 @@ void setup()
   USBSerial.begin(115200);
   delay(1000);
   setLeds(CRGB::Green);
-  IRBeacon.init(OnDataRecv);
-  setLeds(CRGB::Black);
+  laptop.init_ble("Alipay");
+  // IRBeacon.init(OnDataRecv);
+  setLeds(CRGB::Black); 
 }
 
 void loop()
@@ -46,11 +48,8 @@ void loop()
   // myData.a = 
   // USBSerial.println(IRBeacon.isDisconnected());
 
-  if (IRBeacon.isDisconnected()) {
-    set_both_motors(0);
-    toggleLeds(CRGB::Red, CRGB::Black, 500);
-  } else {
-    if (myData.a[0] == '1') { // Currently enabled 
+  if (laptop.isConnected()) {
+    if (laptop_packetBuffer[0] == '1') { // Currently enabled 
       alipay.update();
       if (alipay.translate()) {
         l_motor_write(8-5);
@@ -59,7 +58,7 @@ void loop()
         set_both_motors(8);
       }
 
-      switch (myData.a[1]) { // Check the drive cmd
+      switch (laptop_packetBuffer[1]) { // Check the drive cmd
       case '1':
         alipay.deg = 0; 
         break;
@@ -86,21 +85,22 @@ void loop()
         break;
       }
 
-      if (myData.a[1] != '0') {// Check drive cmd
+      if (laptop_packetBuffer[1] != '0') {// Check drive cmd
         alipay.percentageOfRotation = 0.5;
       } else {
         alipay.percentageOfRotation = 0.00;
       }
 
-    } else {
+    } else { // Currently disabled
       toggleLeds(CRGB::Red, CRGB::Green, 500);
       set_both_motors(0); 
 
       EVERY_N_MILLIS(2000) {
         // myLaptop.send(getVoltage());
       }
-    } 
+    }
+  } else {
+    set_both_motors(0);
+    toggleLeds(CRGB::Red, CRGB::Black, 500);
   }
-  
-  
 }

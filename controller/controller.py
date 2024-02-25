@@ -3,7 +3,7 @@ import threading
 from LaptopKeyboard import *
 from bluetooth import *
 
-uart = BLE_UART(peripheral_name='ESP32_BLE')
+ir_beacon = BLE_UART(peripheral_name='IR Beacon')
 alipay = BLE_UART(peripheral_name='Alipay')
 
 
@@ -12,7 +12,7 @@ keyboard_thread.daemon = True
 keyboard_thread.start()  
 
 async def main():
-    await uart.connect()
+    await ir_beacon.connect()
     await alipay.connect()
     drivecmd = 0
     enabled = 0
@@ -59,16 +59,13 @@ async def main():
             waitForRelease = 0
             
         cmd = f"{enabled}{drivecmd}0000"
-        if (uart.isConnected):
-            await uart.write(cmd)          
-        
+        if (ir_beacon.isConnected):
+            await ir_beacon.write(cmd)          
+        if (alipay.isConnected):
+            await alipay.write(cmd)
 
 asyncio.run(main())
 
     
-
-
-
-# while (True):
        
                                 

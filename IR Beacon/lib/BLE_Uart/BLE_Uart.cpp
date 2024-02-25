@@ -40,9 +40,9 @@ bool BLE_Uart::isConnected() {
   return deviceConnected;
 }
 
-void BLE_Uart::init_ble() {
-  BLEDevice::setDeviceName("ESP32_BLE"); // Name wont change for one of the S3s for some reason. 
-  BLEDevice::init("ESP32_BLE");
+void BLE_Uart::init_ble(const std::string &name) {
+  BLEDevice::setDeviceName(name); // Name wont change for one of the S3s for some reason. 
+  BLEDevice::init(name);
   
   pServer = BLEDevice::createServer(); // Create the BLE Server
   pServer->setCallbacks(new MyServerCallbacks());
