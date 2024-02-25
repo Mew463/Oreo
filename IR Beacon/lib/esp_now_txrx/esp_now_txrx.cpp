@@ -23,20 +23,8 @@ void ESP_NOW_TXRX::init(esp_now_recv_cb_t receiv_cb) {
         USBSerial.println("Error initializing ESP-NOW");
         return;
     }
-    int x = 10;
-    esp_now_register_recv_cb(receiv_cb); //(const uint8_t *mac, const uint8_t *incomingData, int len);
-        // memcpy(this->packetBuffer, incomingData, len);
-        // x = 3;
-        // USBSerial.print("Bytes received: ");
-        // USBSerial.println(len);
-        // USBSerial.print("Message: ");
-
-        // for (int i = 0; i < len; i++) 
-        //     USBSerial.print(incomingData[i]);
-        // USBSerial.println();
     
-
-    // memcpy(peerInfo.peer_addr, receiver_address, 6);
+    esp_now_register_recv_cb(receiv_cb); 
     peerInfo.channel = 0;  
     peerInfo.encrypt = false;
 

@@ -9,8 +9,6 @@ class ESP_NOW_TXRX {
         void send(const uint8_t *bytes);
 
     private:
-        // uint8_t* packetBuffer;
         int packetSize;
         uint8_t *receiver_address;
-        // void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 };

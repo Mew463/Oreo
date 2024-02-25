@@ -12,10 +12,6 @@ class BLE_UART:
     UART_SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
     UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
     UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-
-    # All BLE devices have MTU of at least 23. Subtracting 3 bytes overhead, we can
-    # safely send 20 bytes at a time to any device supporting this service.
-    UART_SAFE_SIZE = 20
     
     def __init__(self, peripheral_name='ESP32_BLE'):
         self._peripheral_name = peripheral_name
@@ -69,8 +65,7 @@ async def main():
 
         for i in range(3):
             msg = await uart.read()
-            msg = msg.decode('utf-8')
             print("received", msg)
-            await uart.write(f"{msg}")
+            await uart.write(msg)
 
 asyncio.run(main())

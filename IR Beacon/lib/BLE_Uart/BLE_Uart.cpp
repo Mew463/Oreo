@@ -5,7 +5,7 @@ BLECharacteristic * pTxCharacteristic;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
-char* packetBuffer;
+uint8_t* packetBuffer;
 int packSize = 6;
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -32,7 +32,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
-BLE_Uart::BLE_Uart(char* _packetBuffer, int _packSize) {
+BLE_Uart::BLE_Uart(uint8_t* _packetBuffer, int _packSize) {
     packetBuffer = _packetBuffer;
     packSize = _packSize;
 }
@@ -59,7 +59,7 @@ void BLE_Uart::init_ble() {
   pServer->getAdvertising()->start();
 }
 
-void BLE_Uart::send(String message) {
-    pTxCharacteristic->setValue(message);
+void BLE_Uart::send(uint8_t *msg) {
+    pTxCharacteristic->setValue(msg, packSize);
     pTxCharacteristic->notify();
 }
