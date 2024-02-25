@@ -7,9 +7,9 @@
 #include <esp_now_txrx.h>
 
 const int packSize = 6;
-uint8_t laptop_packetBuffer[packSize];
+char laptop_packetBuffer[packSize] = {};
 
-uint8_t esp_now_packetBuffer[packSize];
+char esp_now_packetBuffer[packSize] = {};
 
 const int IRLedPin = 4;
 const int freq = 38000;
@@ -31,33 +31,50 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 BLE_Uart myBLEUart = BLE_Uart(laptop_packetBuffer, packSize);
 
 uint8_t mac_addy[] = {0x48, 0x27, 0xE2, 0xD2, 0xC3, 0x94};
-ESP_NOW_TXRX myESP32 = ESP_NOW_TXRX(mac_addy,packSize);
+ESP_NOW_TXRX Alipay = ESP_NOW_TXRX(mac_addy,packSize);
+struct_message myData;
 
 void setup(){
   init_led();
   USBSerial.begin(115200);
-  delay(1000);
+  // delay(1000);
   ledcSetup(ledChannel, freq, resolution);
   ledcAttachPin(IRLedPin, ledChannel);
   
   setLeds(CRGB::Green); 
-  // myESP32.init(OnDataRecv);
+  Alipay.init(OnDataRecv);
   myBLEUart.init_ble();
   setLeds(CRGB::Black);
   
 }
+
+uint8_t charToByte(char *letter) {
+  return byte(atoi(letter));
+}
  
 void loop(){
+  if (myBLEUart.isConnected()) {
+    strcpy(myData.a, laptop_packetBuffer);
+    Alipay.send(myData);
 
-  delay(1000);
-  uint8_t mydata[] = {0x03, 0x02, 0x00, 0x00, 0x00, 0x00};
-  // myESP32.send(mydata);
+    if (laptop_packetBuffer[0] == '0') {// Robot is disabled
+      toggleLeds(CRGB::Red, CRGB::Green, 500);
+      ledcWrite(ledChannel, 0);
+    } else {
+      toggleLeds(CRGB::Blue, CRGB::Purple, 500);
+      ledcWrite(ledChannel, 100);
+    }
 
-
-  myBLEUart.send(mydata);
-  for (int i = 0; i < 6; i ++) {
-    USBSerial.print(laptop_packetBuffer[i]);
+  } else {
+    toggleLeds(CRGB::Red, CRGB::Black, 500);
+    ledcWrite(ledChannel, 0);
   }
-  USBSerial.println();
+  // delay(100);
+  // strcpy(myData.a, "123456");
+  // // myData.a = "123456";
+  // // char* ptr = laptop_packetBuffer[0];
+  // // USBSerial.println(byte('0'));
+  // // mydata[0] = 
+  // Alipay.send(myData);
   
 }

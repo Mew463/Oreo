@@ -7,9 +7,10 @@
 
 class BLE_Uart {
     public:
-        BLE_Uart(uint8_t* _packetBuffer, int _packSize);
+        BLE_Uart(char* _packetBuffer, int _packSize);
         void init_ble();
-        void send(uint8_t *msg);
+        void send(char* _msg);
+        bool isConnected();
     private:
         
 };

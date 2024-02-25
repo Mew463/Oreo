@@ -5,7 +5,6 @@ esp_now_peer_info_t peerInfo;
 ESP_NOW_TXRX::ESP_NOW_TXRX(uint8_t* _receiver_address, int _packetSize) {
     memcpy(peerInfo.peer_addr, _receiver_address, 6);
     receiver_address = _receiver_address;
-    // packetBuffer = _packetBuffer;
     packetSize = _packetSize;
 }
 
@@ -13,8 +12,8 @@ void ESP_NOW_TXRX::getMacAddress() {
     USBSerial.println(WiFi.macAddress());
 }
 
-void ESP_NOW_TXRX::send(const uint8_t *bytes) {
-    esp_now_send(receiver_address, bytes, packetSize);
+void ESP_NOW_TXRX::send(struct_message dat) {
+    esp_now_send(receiver_address, (uint8_t *) &dat, packetSize);
 }
 
 void ESP_NOW_TXRX::init(esp_now_recv_cb_t receiv_cb) {

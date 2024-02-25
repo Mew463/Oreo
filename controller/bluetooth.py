@@ -1,5 +1,4 @@
 import asyncio
-import sys
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.scanner import AdvertisementData
@@ -9,6 +8,7 @@ class BLE_UART:
     UART_SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
     UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
     UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
+    isConnected = False
     
     def __init__(self, peripheral_name='ESP32_BLE'):
         self._peripheral_name = peripheral_name
@@ -18,13 +18,10 @@ class BLE_UART:
         msg = await self._rx_queue.get()
         return msg
     
-    def getBytes(self, letter):
-        return int(letter).to_bytes(1)
-    
     async def write(self, msg):
-        # bytes = self.getBytes(msg[0]) + self.getBytes(msg[1]) + self.getBytes(msg[2]) + self.getBytes(msg[3]) + self.getBytes(msg[4]) + self.getBytes(msg[5]) 
-        # print(bytes)
-        await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg.encode())
+        if isinstance(msg, str):
+            msg = msg.encode()
+        await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg)
         
     async def connect(self):
         self._discovery_queue = asyncio.Queue()
@@ -36,9 +33,11 @@ class BLE_UART:
         client = self._client = BleakClient(device, disconnected_callback=self._handle_disconnect)
         await client.connect()
         await client.start_notify(self.UART_TX_CHAR_UUID, self._rx_handler)    
-        print(f" connected")
+        print("Connected!")
+        self.isConnected = True
         
     async def disconnect(self):
+        self.isConnected = False
         await self._client.disconnect()
     
     async def __aenter__(self):
@@ -56,16 +55,3 @@ class BLE_UART:
         
     def _handle_disconnect(self, _: BleakClient):
         self._rx_queue.put_nowait(None)
-
-
-async def main():
-    async with BLE_UART() as uart:
-        await uart.connect()
-
-        for i in range(3):
-            # msg = 123456
-            await uart.write("123456")
-            await asyncio.sleep(1)
-# num = "123456"
-# print(int(num[0]).to_bytes(1))
-asyncio.run(main())
