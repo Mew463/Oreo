@@ -41,7 +41,7 @@ bool BLE_Uart::isConnected() {
 }
 
 void BLE_Uart::init_ble(const std::string &name) {
-  BLEDevice::setDeviceName(name); // Name wont change for one of the S3s for some reason. 
+  BLEDevice::setDeviceName(name);
   BLEDevice::init(name);
   
   pServer = BLEDevice::createServer(); // Create the BLE Server
@@ -62,7 +62,14 @@ void BLE_Uart::init_ble(const std::string &name) {
   pServer->getAdvertising()->start();
 }
 
-void BLE_Uart::send(char *msg) {
-    pTxCharacteristic->setValue(msg);
+void BLE_Uart::send(String message) {
+    pTxCharacteristic->setValue(message);
     pTxCharacteristic->notify();
 }
+
+void BLE_Uart::send(float value)
+ {
+  char conversionbuffer[5];
+  sprintf(conversionbuffer, "%.2f", value);
+  send(conversionbuffer);
+ }

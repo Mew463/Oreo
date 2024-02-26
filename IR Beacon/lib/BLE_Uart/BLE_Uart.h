@@ -9,7 +9,8 @@ class BLE_Uart {
     public:
         BLE_Uart(char* _packetBuffer, int _packSize);
         void init_ble(const std::string &name);
-        void send(char* _msg);
+        void send(String message);
+        void send(float value);
         bool isConnected();
     private:
         

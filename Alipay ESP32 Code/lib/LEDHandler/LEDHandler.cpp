@@ -4,6 +4,9 @@ bool ledToggleState = 0;
 unsigned long lastdelayToggle = millis();
 unsigned long currentDelayToggle = millis();
 
+CRGB lastColor1;
+CRGB lastColor2;
+
 CRGB leds[1];
 
 void init_led() {
@@ -21,7 +24,12 @@ void syncToggle() {
 }
 
 void toggleLeds(CRGB color1, CRGB color2, int delayMS) {
+    if (color1 != lastColor1 || color2 != lastColor2 || millis() - lastdelayToggle > delayMS + 500) {
+        lastdelayToggle = millis(); 
+        ledToggleState = 0;
+    }
     currentDelayToggle = millis();
+    
     if (currentDelayToggle - lastdelayToggle > delayMS) {
         ledToggleState = !ledToggleState;
         lastdelayToggle = currentDelayToggle;
@@ -31,4 +39,7 @@ void toggleLeds(CRGB color1, CRGB color2, int delayMS) {
         setLeds(color1);
     else
         setLeds(color2);
+
+    lastColor1 = color1;
+    lastColor2 = color2;
 }

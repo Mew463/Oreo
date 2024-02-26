@@ -10,41 +10,39 @@ class BLE_UART:
     UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
     isConnected = False
     
-    def __init__(self, peripheral_name='ESP32_BLE'):
+    def __init__(self, peripheral_name=""):
         self._peripheral_name = peripheral_name
         self._rx_queue = asyncio.Queue()
         
     async def read(self):
-        msg = await self._rx_queue.get()
-        return msg
-    
-    async def write(self, msg):
-        if isinstance(msg, str):
-            msg = msg.encode()
-        await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg)
-        
+        try:
+            msg = await self._rx_queue.get()
+            return msg.decode()
+        except Exception as e:
+            await self.disconnect()
+
+    async def write(self, msg): # Where msg is a String
+        try:
+            await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg.encode())
+        except Exception as e:
+            await self.disconnect()
+
     async def connect(self):
         self._discovery_queue = asyncio.Queue()
         device = None
-        print(f"scanning for {self._peripheral_name}")
+        print(f"Scanning for {self._peripheral_name}")
         async with BleakScanner(detection_callback=self._find_uart_device):
             device: BLEDevice = await self._discovery_queue.get()
-        print(f"connecting to {self._peripheral_name} ...", end="")
         client = self._client = BleakClient(device, disconnected_callback=self._handle_disconnect)
         await client.connect()
         await client.start_notify(self.UART_TX_CHAR_UUID, self._rx_handler)    
-        print("Connected!")
+        print(f"Connected to {self._peripheral_name}!")
         self.isConnected = True
         
     async def disconnect(self):
+        print(f"Disconnected from {self._peripheral_name}")
         self.isConnected = False
         await self._client.disconnect()
-    
-    async def __aenter__(self):
-        return self
-    
-    async def __aexit__(self, *args):
-        await self.disconnect()
         
     def _rx_handler(self, _: int, data: bytearray):
         self._rx_queue.put_nowait(data)

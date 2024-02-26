@@ -22,8 +22,6 @@ class BLE_UART:
         return int(letter).to_bytes(1)
     
     async def write(self, msg):
-        # bytes = self.getBytes(msg[0]) + self.getBytes(msg[1]) + self.getBytes(msg[2]) + self.getBytes(msg[3]) + self.getBytes(msg[4]) + self.getBytes(msg[5]) 
-        # print(bytes)
         await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg.encode())
         
     async def connect(self):
