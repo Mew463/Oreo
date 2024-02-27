@@ -10,8 +10,9 @@ class BLE_UART:
     UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
     isConnected = False
     
-    def __init__(self, peripheral_name=""):
+    def __init__(self, peripheral_name="", address = ""):
         self._peripheral_name = peripheral_name
+        self._address = address
         self._rx_queue = asyncio.Queue()
         
     async def read(self):
@@ -48,7 +49,7 @@ class BLE_UART:
         self._rx_queue.put_nowait(data)
     
     def _find_uart_device(self, device: BLEDevice, adv: AdvertisementData):
-        if device.name == self._peripheral_name:
+        if device.address == self._address:
             self._discovery_queue.put_nowait(device)
         
     def _handle_disconnect(self, _: BleakClient):

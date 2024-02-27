@@ -41,9 +41,9 @@ bool BLE_Uart::isConnected() {
 }
 
 void BLE_Uart::init_ble(const std::string &name) {
-  BLEDevice::setDeviceName(name);
   BLEDevice::init(name);
-  
+  BLEDevice::setDeviceName(name);
+
   pServer = BLEDevice::createServer(); // Create the BLE Server
   pServer->setCallbacks(new MyServerCallbacks());
   

@@ -24,7 +24,7 @@ void syncToggle() {
 }
 
 void toggleLeds(CRGB color1, CRGB color2, int delayMS) {
-    if (color1 != lastColor1 || color2 != lastColor2 || millis() - lastdelayToggle > delayMS + 500) {
+    if (color1 != lastColor1 || color2 != lastColor2 || millis() - lastdelayToggle > delayMS + 50) { // For color syncing purposes between different devices
         lastdelayToggle = millis(); 
         ledToggleState = 0;
     }

@@ -8,7 +8,7 @@
 #include <BLE_Uart.h>
 
 const int packSize = 6;
-char laptop_packetBuffer[packSize] = {};
+char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 
@@ -33,13 +33,13 @@ void setup()
 void loop()
 {
   if (laptop.isConnected()) {
-    if (laptop_packetBuffer[0] == '1') { // Currently enabled and translating!!
+    if (laptop_packetBuffer[0] == '1' || laptop_packetBuffer[0] == '2') { // Currently enabled and translating!!
       alipay.update();
       if (alipay.translate()) {
         l_motor_write(melty_parameters.rot-melty_parameters.tra);
         r_motor_write(melty_parameters.rot+melty_parameters.tra);
       } else {
-      set_both_motors(melty_parameters.rot);
+        set_both_motors(melty_parameters.rot);
       }
 
       switch (laptop_packetBuffer[1]) { // Check the drive cmd
@@ -75,11 +75,6 @@ void loop()
         alipay.percentageOfRotation = 0;
       }
 
-      EVERY_N_MILLIS(50) { // Print out the settings
-        String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
-        laptop.send(msg);
-      }
-
       EVERY_N_MILLIS(100) {
         switch (laptop_packetBuffer[2]) {
           case '1':
@@ -100,6 +95,11 @@ void loop()
           case '6':
             melty_parameters.per = melty_parameters.per - .03;
             break;
+        }
+
+        if (laptop_packetBuffer[2] != '0') {
+          String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
+          laptop.send(msg);
         }
       }
 
