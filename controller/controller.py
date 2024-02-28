@@ -1,5 +1,4 @@
-
-# sudo pkill bluetoothd if bluetooth not working on mac
+# `sudo pkill bluetoothd` if bluetooth not working on ming's mac m3 pro
 
 import threading
 from LaptopKeyboard import *
@@ -31,33 +30,6 @@ async def bluetooth_comm_handler(BLE_DEVICE):
             await BLE_DEVICE.write(cmd)
         else:  
             await BLE_DEVICE.connect()
-
-# async def alipay_comm():
-#     await alipay.connect()
-#     while True:
-#         await asyncio.sleep(0.05)
-#         if (alipay.isConnected):
-#             await alipay.write(cmd)
-#         else:  
-#             await alipay.connect()
-            
-# async def ir_beacon_1_comm():
-#     await ir_beacon_1.connect()
-#     while True:
-#         await asyncio.sleep(0.05)
-#         if (ir_beacon_1.isConnected):
-#             await ir_beacon_1.write(cmd)
-#         else:
-#             await ir_beacon_1.connect()
-            
-# async def ir_beacon_2_comm():
-#     await ir_beacon_2.connect()
-#     while True:
-#         await asyncio.sleep(0.05)
-#         if (ir_beacon_2.isConnected):
-#             await ir_beacon_2.write(cmd)
-#         else:
-#             await ir_beacon_2.connect()
             
 async def cmd_handler():
     global cmd

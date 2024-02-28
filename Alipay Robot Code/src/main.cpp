@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <LEDHandler.h>
-#include "USB.h"
 #include <mpu6050.h>
 #include <Drive_Motors.h>
 #include <Battery_Monitor.h>
@@ -75,6 +74,10 @@ void loop()
         alipay.percentageOfRotation = 0;
       }
 
+      EVERY_N_SECONDS(1) {
+        // String msg = "RPM: "
+      }
+
       EVERY_N_MILLIS(100) {
         switch (laptop_packetBuffer[2]) {
           case '1':
@@ -97,7 +100,7 @@ void loop()
             break;
         }
 
-        if (laptop_packetBuffer[2] != '0') {
+        if (!(laptop_packetBuffer[2] == '0' || laptop_packetBuffer[2] == '7' || laptop_packetBuffer[2] == '8')) {
           String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
           laptop.send(msg);
         }

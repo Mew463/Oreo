@@ -7,7 +7,6 @@ melty::melty() {
 
 void melty::update() {
     bool curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
-    // USBSerial.println(digitalRead(TOP_IR_PIN));
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
             setLeds(CRGB::Green);
@@ -34,6 +33,21 @@ void melty::update() {
             time_seen_beacon = millis() - lastPulse;
         }
 
+        /* A better IR Beam algorithm planning:
+        I think that we want to use the falling edge of when the time_seen_beacon is the biggest per revolution. This is to minimize
+        Interference from other objects that are producing very annoying reflections.
+
+        Everytime we have a new time_seen_beacon value:
+            If the new value is within some amount of the max value from our ring buffer:
+                calculate period_ms from that 
+                if calculated period_ms is within some margin from another ring buffer: 
+                    that is the value we should based our calculations off of 
+                
+            store value in a ring buffer
+        
+
+        */
+
     lastSeenIRLed = curSeenIRLed;
 }
 
@@ -46,10 +60,9 @@ bool melty::translate() { // Returns whether or not robot should translate now
 }
 
 bool melty::isBeaconSensed(bool currentReading) {
-    
-    for (int i = 0; i < IRLedDataSize; i++)
-        USBSerial.print(IRLedReadings[i]);
-    USBSerial.println();
+    // for (int i = 0; i < IRLedDataSize; i++)
+    //     USBSerial.print(IRLedReadings[i]);
+    // USBSerial.println();
 
     IRLedReadings[IRLedIndex++] = currentReading; // This is just code for a ring buffer
     if (IRLedIndex == IRLedDataSize)

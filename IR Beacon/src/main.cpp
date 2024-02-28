@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <WiFiUdp.h>
 #include <LEDHandler.h>
-#include "USB.h"
 #include <Battery_Monitor.h>
 #include <BLE_Uart.h>
 #include <esp_now_txrx.h>
