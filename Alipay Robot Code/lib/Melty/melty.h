@@ -69,7 +69,6 @@ class melty {
     public:
         melty();
         void update();
-        // bool isLegit();
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
         bool translate();

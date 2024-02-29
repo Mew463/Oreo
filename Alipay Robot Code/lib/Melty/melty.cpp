@@ -37,15 +37,14 @@ void melty::computeTimings() {
     unsigned long deltaDriveTiming = (percentageOfRotation * period_micros_calc.getMaxVal())/2;
 
     unsigned long offset = 0;
-    if (centerOfDrivePulse - deltaDriveTiming < micros()) { // If we're supposed to start translating before we have stored those values, offset by one rotation
-        // setLeds(CRGB::White);
+    if (centerOfDrivePulse - deltaDriveTiming < micros()) { // If we're supposed to start translating before we have calculated those values, offset by one rotation
         offset = period_micros_calc.getMaxVal();
     }
 
-    if (timingToggle) { // It is going to translate whilst computing the new timings we should use a different set of variables
+    if (timingToggle) { // Swap variables that we use so we don't interfere (in the case that we're currently translating whilst computing)
         startDrive = centerOfDrivePulse - deltaDriveTiming + offset;
         endDrive = centerOfDrivePulse + deltaDriveTiming + offset;
-    } else { // Do the same but calculate with the other values
+    } else { 
         startDrive2  = centerOfDrivePulse - deltaDriveTiming + offset;
         endDrive2 = centerOfDrivePulse + deltaDriveTiming + offset;
     } 

@@ -3,9 +3,9 @@
 
 SerialHandler myComputer = SerialHandler(); 
 
-const int motpin = 8;
+const int motpin = 8; // 7 is right and 8 is left
 const int motchannel = 0;
-const int neutralVal = 120;
+const int neutralVal = 189;
 
 void autoMotorTune() {
   delay(1000);
@@ -14,16 +14,19 @@ void autoMotorTune() {
   delay(3000);
   USBSerial.println("Turn motor on!!!");
   delay(5000);
-  USBSerial.println("Calibrating neutral");
-  ledcWrite(motchannel, neutralVal); // Calibrate neutral stick
-  delay(10000);
+  ledcWrite(motchannel, 40);
+  USBSerial.println("Tuning low value!!!");
+  delay(2500);
+  ledcWrite(motchannel, neutralVal);
+  USBSerial.println("Tuning neutral value!!!");
+  delay(2500);
   USBSerial.println("Done!!!");
 }
 
 
 void setup() {
   USBSerial.begin(115200);  
-  ledcSetup(motchannel, 10000, 8);
+  ledcSetup(motchannel, 500, 8);
   ledcAttachPin(motpin, motchannel);
   ledcWrite(motchannel, neutralVal);
 
