@@ -13,7 +13,7 @@ BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 
 melty alipay = melty();
 struct melty_parameters {
-  int rot = 15;
+  int rot = 10;
   int tra = 5;
   float per = 0.5;
 } melty_parameters;
@@ -74,8 +74,11 @@ void loop()
         alipay.percentageOfRotation = 0;
       }
 
-      EVERY_N_SECONDS(1) {
-        // String msg = "RPM: "
+      EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
+        // String msg = " time_seen beacon: " + alipay.time_seen_beacon_calc.returnArray();
+        // laptop.send(msg);
+        String msg = "rpm : " + String(alipay.RPM);
+        laptop.send(msg);
       }
 
       EVERY_N_MILLIS(100) {

@@ -52,12 +52,14 @@ void loop(){
       if (laptop_packetBuffer[0] == TARGETCMD) {
         switch (laptop_packetBuffer[2]) {
           case '7':
-            dutycycle++;
+            dutycycle+=3;
             if (dutycycle > maxdutycycle)
               dutycycle = maxdutycycle;
             break;
           case '8':
-            dutycycle--;
+            dutycycle-=3;
+            if (dutycycle < 0)
+              dutycycle = 0;
             break;
         }
         if (laptop_packetBuffer[2] == '7' || laptop_packetBuffer[2] == '8') {

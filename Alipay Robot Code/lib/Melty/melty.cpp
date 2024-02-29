@@ -2,7 +2,8 @@
 #include <LEDHandler.h>
 
 melty::melty() {
-
+    period_micros_calc = ringBuffer(1);
+    time_seen_beacon_calc = ringBuffer(0.5); 
 }
 
 void melty::update() {
@@ -10,49 +11,51 @@ void melty::update() {
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
             setLeds(CRGB::Green);
-            currentPulse = millis();
-            unsigned long period_MS = currentPulse - lastPulse; // How long it takes to complete one revolution
-            RPM = 60000/(period_MS);
+            currentPulse = micros();
+            period_micros = currentPulse - lastPulse; // How long it takes to complete one revolution
+            period_micros_calc.update(period_micros);
             lastPulse = currentPulse;
-
-            unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
-            unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*period_MS; // Direction that we should be driving towards
-            unsigned long deltaDriveTiming = (percentageOfRotation * period_MS)/2;
-            if (timingToggle) { // If it is going to translate whilst computing the new timings we should use a different set of variables
-                endDrive = centerOfDrivePulse + deltaDriveTiming;
-                startDrive = centerOfDrivePulse - deltaDriveTiming;
-            } else { // Do the same but calculate with the other values
-                endDrive2 = centerOfDrivePulse + deltaDriveTiming;
-                startDrive2  = centerOfDrivePulse - deltaDriveTiming;
-            }
-
-            timingToggle = !timingToggle; // Toggle it so that next iteration uses different variables 
         }
         else { // Activates on the falling edge of seeing the IR LED
             setLeds(CRGB::Red);
-            time_seen_beacon = millis() - lastPulse;
+            time_seen_beacon = micros() - currentPulse;
+            time_seen_beacon_calc.update(time_seen_beacon);
+            
+            if (time_seen_beacon_calc.isLegit(time_seen_beacon)) {// && period_ms_calc.isLegit(period_MS))
+                computeTimings();
+            }
         }
 
-        /* A better IR Beam algorithm planning:
-        I think that we want to use the falling edge of when the time_seen_beacon is the biggest per revolution. This is to minimize
-        Interference from other objects that are producing very annoying reflections.
-
-        Everytime we have a new time_seen_beacon value:
-            If the new value is within some amount of the max value from our ring buffer:
-                calculate period_ms from that 
-                if calculated period_ms is within some margin from another ring buffer: 
-                    that is the value we should based our calculations off of 
-                
-            store value in a ring buffer
-        
-
-        */
-
+    
     lastSeenIRLed = curSeenIRLed;
 }
 
+void melty::computeTimings() {
+    RPM = (60000*1000)/(period_micros_calc.getMaxVal());
+    unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
+    unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*period_micros_calc.getMaxVal(); // Direction that we should be driving towards
+    unsigned long deltaDriveTiming = (percentageOfRotation * period_micros_calc.getMaxVal())/2;
+
+    unsigned long offset = 0;
+    if (centerOfDrivePulse - deltaDriveTiming < micros()) { // If we're supposed to start translating before we have stored those values, offset by one rotation
+        // setLeds(CRGB::White);
+        offset = period_micros_calc.getMaxVal();
+    }
+
+    if (timingToggle) { // It is going to translate whilst computing the new timings we should use a different set of variables
+        startDrive = centerOfDrivePulse - deltaDriveTiming + offset;
+        endDrive = centerOfDrivePulse + deltaDriveTiming + offset;
+    } else { // Do the same but calculate with the other values
+        startDrive2  = centerOfDrivePulse - deltaDriveTiming + offset;
+        endDrive2 = centerOfDrivePulse + deltaDriveTiming + offset;
+    } 
+
+    timingToggle = !timingToggle; // Toggle it so that next iteration uses different variables 
+
+}
+
 bool melty::translate() { // Returns whether or not robot should translate now
-    unsigned long currentTime = millis();
+    unsigned long currentTime = micros();
     if (percentageOfRotation != 0)
         return (currentTime > startDrive && currentTime < endDrive || currentTime > startDrive2 && currentTime < endDrive2);
     else
