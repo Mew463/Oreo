@@ -34,7 +34,7 @@ void setup()
   laptop.init_ble("Alipay");
   setLeds(CRGB::Black); 
 }
-
+ 
 void loop()
 {
   if (laptop.isConnected()) {
