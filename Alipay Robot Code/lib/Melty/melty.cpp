@@ -7,7 +7,12 @@ melty::melty() {
 }
 
 void melty::update() {
-    bool curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
+    bool curSeenIRLed;
+    if (useTopIr)
+        curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
+    else
+        curSeenIRLed = isBeaconSensed(!digitalRead(BOTTOM_IR_PIN));
+
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
             setLeds(CRGB::Green);

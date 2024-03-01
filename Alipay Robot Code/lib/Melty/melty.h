@@ -75,6 +75,7 @@ class melty {
         int RPM = 0;
         int deg = 0;
         float percentageOfRotation = 0;
+        bool useTopIr = 1;
     // private:
         bool lastSeenIRLed = 0;
         unsigned long period_micros = micros();

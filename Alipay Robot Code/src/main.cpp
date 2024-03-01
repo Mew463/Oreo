@@ -10,13 +10,19 @@ const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
+Drive_Motors driveMotors = Drive_Motors();
 
 melty alipay = melty();
 struct melty_parameters {
   int rot = 10;
-  int tra = 5;
+  int tra = 6;
   float per = 0.5;
 } melty_parameters;
+
+struct tank_drive_parameters {
+  int drive = 3;
+  int turn = 2;
+} tank_drive_parameters;
 
 void setup()
 {
@@ -24,7 +30,7 @@ void setup()
   setLeds(CRGB::Green);
   USBSerial.begin(115200);
   init_mpu6050();
-  init_motors();
+  driveMotors.init_motors();
   laptop.init_ble("Alipay");
   setLeds(CRGB::Black); 
 }
@@ -32,13 +38,24 @@ void setup()
 void loop()
 {
   if (laptop.isConnected()) {
-    if (laptop_packetBuffer[0] == '1' || laptop_packetBuffer[0] == '2') { // Currently enabled and translating!!
+    if (driveMotors.isNeutral()) {
+      if (getAccelZ() > 7) {
+        alipay.useTopIr = 1;
+        driveMotors.flip_motors = 0;
+      }
+      if (getAccelZ() < -7) {
+        alipay.useTopIr = 0;
+        driveMotors.flip_motors = 1;
+      }
+    }
+
+    if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
       alipay.update();
       if (alipay.translate()) {
-        l_motor_write(melty_parameters.rot-melty_parameters.tra);
-        r_motor_write(melty_parameters.rot+melty_parameters.tra);
+        driveMotors.l_motor_write((melty_parameters.rot-melty_parameters.tra));
+        driveMotors.r_motor_write((melty_parameters.rot+melty_parameters.tra));
       } else {
-        set_both_motors(melty_parameters.rot);
+        driveMotors.set_both_motors(melty_parameters.rot);
       }
 
       switch (laptop_packetBuffer[1]) { // Check the drive cmd
@@ -68,15 +85,13 @@ void loop()
         break;
       }
 
-      if (laptop_packetBuffer[1] != '0') {// Check drive cmd
+      if (laptop_packetBuffer[1] != '0') {// Check drive cmd for setting the "neutral" state
         alipay.percentageOfRotation = melty_parameters.per;
       } else {
         alipay.percentageOfRotation = 0;
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        // String msg = " time_seen beacon: " + alipay.time_seen_beacon_calc.returnArray();
-        // laptop.send(msg);
         String msg = "rpm : " + String(alipay.RPM);
         laptop.send(msg);
       }
@@ -103,22 +118,90 @@ void loop()
             break;
         }
 
-        if (!(laptop_packetBuffer[2] == '0' || laptop_packetBuffer[2] == '7' || laptop_packetBuffer[2] == '8')) {
+        if (laptop_packetBuffer[2] != '0') {
           String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
           laptop.send(msg);
         }
       }
 
+    } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
+      int lmotorpwr = 0;
+      int rmotorpwr = 0;
+      switch (laptop_packetBuffer[1]) { // Check the drive cmd
+      case '0':
+        lmotorpwr = 0;
+        rmotorpwr = 0;
+        break;
+      case '1':
+        lmotorpwr = tank_drive_parameters.drive;
+        rmotorpwr = tank_drive_parameters.drive;
+        break;
+      case '2':
+        lmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn;
+        rmotorpwr = tank_drive_parameters.drive; 
+        break;
+      case '3':
+        lmotorpwr = tank_drive_parameters.turn;
+        rmotorpwr = -tank_drive_parameters.turn; 
+        break;
+      case '4':
+        lmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn;
+        rmotorpwr = -tank_drive_parameters.drive;
+        break;
+      case '5':
+        lmotorpwr = -tank_drive_parameters.drive;
+        rmotorpwr = -tank_drive_parameters.drive;
+        break;
+      case '6':
+        lmotorpwr = -tank_drive_parameters.drive;
+        rmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn; 
+        break;
+      case '7':
+        lmotorpwr = -tank_drive_parameters.turn;
+        rmotorpwr = tank_drive_parameters.turn;  
+        break;
+      case '8':
+        lmotorpwr = tank_drive_parameters.drive;
+        rmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn; 
+        break;
+      }
+
+      EVERY_N_MILLIS(100) {
+        switch (laptop_packetBuffer[2]) {
+          case '1':
+            tank_drive_parameters.drive++;
+            break;
+          case '2':
+            tank_drive_parameters.drive--;
+            break;
+          case '3':
+            tank_drive_parameters.turn++;
+            break;
+          case '4':
+            tank_drive_parameters.turn--;
+            break;
+        }
+
+        if (laptop_packetBuffer[2] != '0') {
+          String msg = "drivpwr : " + String(tank_drive_parameters.drive) + " turnpwr : " + String(tank_drive_parameters.turn);
+          laptop.send(msg);
+        }
+      }
+
+      driveMotors.l_motor_write(-lmotorpwr);
+      driveMotors.r_motor_write(rmotorpwr);
+      toggleLeds(CRGB::White, CRGB::Black, 500);
+    
     } else { // Currently disabled
       toggleLeds(CRGB::Red, CRGB::Green, 500);
-      set_both_motors(0); 
+      driveMotors.set_both_motors(0); 
         EVERY_N_SECONDS(10) {
-        laptop.send(get3sVoltage());
+          laptop.send(get3sVoltage());
         }
 
     }
   } else {
-    set_both_motors(0);
+    driveMotors.set_both_motors(0);
     toggleLeds(CRGB::Red, CRGB::Black, 500);
   }
 }

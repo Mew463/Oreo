@@ -1,7 +1,9 @@
 #include "Drive_Motors.h"
 #include <Arduino.h>
 
-void init_motors() {
+
+
+void Drive_Motors::init_motors() {
     ledcSetup(lMotChannel, motFreq, resolution);
     ledcSetup(rMotChannel, motFreq, resolution);
     ledcAttachPin(lMotPin, lMotChannel);
@@ -11,15 +13,41 @@ void init_motors() {
     r_motor_write(neutralValue);
 }
 
-void l_motor_write(int value) { // From 0 -> 100
-    ledcWrite(lMotChannel, neutralValue + value);
+void Drive_Motors::l_motor_write(int value) { 
+    l_motor_value = value;
+    if (value != 0)
+        if (value > 0)
+            value += 2;
+        else
+            value -= 2;
+    if (!flip_motors)
+        ledcWrite(lMotChannel, neutralValue + value);
+    else
+        ledcWrite(rMotChannel, neutralValue + value);
 }
 
-void r_motor_write(int value) { // From 0 -> 100
-    ledcWrite(rMotChannel, neutralValue + value);
+void Drive_Motors::r_motor_write(int value) { 
+    r_motor_value = 0;
+    if (value != 0)
+        if (value > 0)
+            value += 2;
+        else
+            value -= 2;
+
+    if (!flip_motors)
+        ledcWrite(rMotChannel, neutralValue + value);
+    else
+        ledcWrite(lMotChannel, neutralValue + value);
 }
 
-void set_both_motors(int value) {
+void Drive_Motors::set_both_motors(int value) {
     l_motor_write(value);
     r_motor_write(value);
+}
+
+bool Drive_Motors::isNeutral() {
+    if (l_motor_value == 0 && r_motor_value == 0)
+        return true;
+    else
+        return false;
 }
