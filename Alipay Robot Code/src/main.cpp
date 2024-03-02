@@ -8,6 +8,8 @@
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
+bool wasMeltying = false;
+int slowDownSpeed = 5;
 
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors();
@@ -17,10 +19,11 @@ struct melty_parameters {
   int rot = 10;
   int tra = 6;
   float per = 0.5;
+  int invert = 1;
 } melty_parameters;
 
 struct tank_drive_parameters {
-  int drive = 3;
+  int drive = 2;
   int turn = 2;
 } tank_drive_parameters;
 
@@ -42,20 +45,22 @@ void loop()
       if (getAccelZ() > 7) {
         alipay.useTopIr = 1;
         driveMotors.flip_motors = 0;
+        melty_parameters.invert = 1;
       }
       if (getAccelZ() < -7) {
         alipay.useTopIr = 0;
         driveMotors.flip_motors = 1;
+        melty_parameters.invert = -1;
       }
     }
 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
       alipay.update();
       if (alipay.translate()) {
-        driveMotors.l_motor_write((melty_parameters.rot-melty_parameters.tra));
-        driveMotors.r_motor_write((melty_parameters.rot+melty_parameters.tra));
+        driveMotors.l_motor_write(melty_parameters.invert * (melty_parameters.rot-melty_parameters.tra));
+        driveMotors.r_motor_write(melty_parameters.invert *(melty_parameters.rot+melty_parameters.tra));
       } else {
-        driveMotors.set_both_motors(melty_parameters.rot);
+        driveMotors.set_both_motors(melty_parameters.invert * melty_parameters.rot);
       }
 
       switch (laptop_packetBuffer[1]) { // Check the drive cmd
@@ -124,7 +129,18 @@ void loop()
         }
       }
 
+      wasMeltying = 1;
+
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
+      if (wasMeltying) { // Was previously meltybraining, we need to slowdown
+        unsigned long timeout = millis();
+        while (abs(getAccelY()) > .3 && millis() - timeout < 2000) {
+          driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
+          toggleLeds(CRGB::White, CRGB::Red, 150);
+        }
+        wasMeltying = 0;
+      }
+      
       int lmotorpwr = 0;
       int rmotorpwr = 0;
       switch (laptop_packetBuffer[1]) { // Check the drive cmd
@@ -198,7 +214,6 @@ void loop()
         EVERY_N_SECONDS(10) {
           laptop.send(get3sVoltage());
         }
-
     }
   } else {
     driveMotors.set_both_motors(0);

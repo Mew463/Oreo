@@ -37,11 +37,6 @@ class ringBuffer{
                 return false;
         }
 
-    // private:
-        unsigned long ringBuf[RINGBUFSIZE];
-        int curIndex = 0;
-        float criteria = 0;
-
         unsigned long getMaxVal() {
             unsigned long maxVal = 0;
             for (int i = 0; i < RINGBUFSIZE; i++)
@@ -49,7 +44,11 @@ class ringBuffer{
                     maxVal = ringBuf[i];
             return maxVal;
         }
-        
+
+    private:
+        unsigned long ringBuf[RINGBUFSIZE];
+        int curIndex = 0;
+        float criteria = 0;
         String returnArray() {
             String msg = "";
             for (int i = 0; i < RINGBUFSIZE; i++) {
@@ -76,7 +75,7 @@ class melty {
         int deg = 0;
         float percentageOfRotation = 0;
         bool useTopIr = 1;
-    // private:
+    private:
         bool lastSeenIRLed = 0;
         unsigned long period_micros = micros();
         unsigned long currentPulse = micros();

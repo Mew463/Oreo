@@ -27,7 +27,7 @@ void Drive_Motors::l_motor_write(int value) {
 }
 
 void Drive_Motors::r_motor_write(int value) { 
-    r_motor_value = 0;
+    r_motor_value = value;
     if (value != 0)
         if (value > 0)
             value += 2;

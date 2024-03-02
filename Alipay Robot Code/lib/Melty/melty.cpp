@@ -26,7 +26,7 @@ void melty::update() {
             time_seen_beacon = micros() - currentPulse;
             time_seen_beacon_calc.update(time_seen_beacon);
             
-            if (time_seen_beacon_calc.isLegit(time_seen_beacon)) {// && period_ms_calc.isLegit(period_MS))
+            if (time_seen_beacon_calc.isLegit(time_seen_beacon)) { // && period_micros_calc.isLegit(period_micros) 
                 computeTimings();
             }
         }
