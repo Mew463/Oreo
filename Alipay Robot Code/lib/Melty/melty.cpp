@@ -36,14 +36,15 @@ void melty::update() {
 }
 
 void melty::computeTimings() {
-    RPM = (60000*1000)/(period_micros_calc.getMaxVal());
+    unsigned long max_period = period_micros_calc.getMaxVal();
+    RPM = (us_per_min)/(max_period);
     unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
-    unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*period_micros_calc.getMaxVal(); // Direction that we should be driving towards
-    unsigned long deltaDriveTiming = (percentageOfRotation * period_micros_calc.getMaxVal())/2;
+    unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*max_period; // Direction that we should be driving towards
+    unsigned long deltaDriveTiming = (percentageOfRotation * max_period)/2;
 
     unsigned long offset = 0;
     if (centerOfDrivePulse - deltaDriveTiming < micros()) { // If we're supposed to start translating before we have calculated those values, offset by one rotation
-        offset = period_micros_calc.getMaxVal();
+        offset = max_period;
     }
 
     if (timingToggle) { // Swap variables that we use so we don't interfere (in the case that we're currently translating whilst computing)
@@ -70,21 +71,23 @@ bool melty::isBeaconSensed(bool currentReading) {
     // for (int i = 0; i < IRLedDataSize; i++)
     //     USBSerial.print(IRLedReadings[i]);
     // USBSerial.println();
-
-    IRLedReadings[IRLedIndex++] = currentReading; // This is just code for a ring buffer
+    enum states {seen, not_seen};
+    
+    IRLedReadings[IRLedIndex++] = currentReading; // Add to ring buffer
     if (IRLedIndex == IRLedDataSize)
         IRLedIndex = 0;
 
-    if (lastIRLedReturnValue) {
+    if (lastIRLedReturnValue == seen) {
+        for (int i = 0; i < IRLedDataSize; i++)
+            if (IRLedReadings[i] == lastIRLedReturnValue) // If any of our readings in the ring buffer is the last value, keep the previous state
+                return seen;
+        lastIRLedReturnValue = not_seen;
+        return not_seen;
+    } else { // This is to cover the not_seen case
         for (int i = 0; i < IRLedDataSize; i++)
             if (IRLedReadings[i] == lastIRLedReturnValue) 
-                return true;
-        lastIRLedReturnValue = !lastIRLedReturnValue;
-    } else {
-        for (int i = 0; i < IRLedDataSize; i++)
-            if (IRLedReadings[i] == lastIRLedReturnValue) 
-                return false;
-        lastIRLedReturnValue = !lastIRLedReturnValue;
+                return not_seen;
+        lastIRLedReturnValue = seen;
+        return seen;
     }
-    return lastIRLedReturnValue;
 }

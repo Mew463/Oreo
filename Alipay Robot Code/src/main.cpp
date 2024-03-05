@@ -8,23 +8,26 @@
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
+const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
 bool wasMeltying = false;
-int slowDownSpeed = 5;
+int slowDownSpeed = 8;
 
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors();
 
 melty alipay = melty();
 struct melty_parameters {
-  int rot = 10;
+  int rot = 6;
   int tra = 6;
   float per = 0.5;
   int invert = 1;
+  int boost = 5;
 } melty_parameters;
 
 struct tank_drive_parameters {
   int drive = 2;
   int turn = 2;
+  int boost = 2;
 } tank_drive_parameters;
 
 void setup()
@@ -56,41 +59,26 @@ void loop()
 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
       alipay.update();
+      int boostVal = 0;
+      if (laptop_packetBuffer[3] == '1')
+        boostVal = melty_parameters.boost;
       if (alipay.translate()) {
-        driveMotors.l_motor_write(melty_parameters.invert * (melty_parameters.rot-melty_parameters.tra));
-        driveMotors.r_motor_write(melty_parameters.invert *(melty_parameters.rot+melty_parameters.tra));
+        driveMotors.l_motor_write(melty_parameters.invert * (melty_parameters.rot - (melty_parameters.tra + boostVal)));
+        driveMotors.r_motor_write(melty_parameters.invert * (melty_parameters.rot + (melty_parameters.tra + boostVal)));
       } else {
-        driveMotors.set_both_motors(melty_parameters.invert * melty_parameters.rot);
+        driveMotors.set_both_motors(melty_parameters.invert * (melty_parameters.rot + boostVal));
       }
 
-      switch (laptop_packetBuffer[1]) { // Check the drive cmd
-      case '8':
-        alipay.deg = 0; 
-        break;
-      case '7':
-        alipay.deg = 45; 
-        break;
-      case '6':
-        alipay.deg = 90; 
-        break;
-      case '5':
-        alipay.deg = 135; 
-        break;
-      case '4':
-        alipay.deg = 180; 
-        break;
-      case '3':
-        alipay.deg = 225; 
-        break;
-      case '2':
-        alipay.deg = 270; 
-        break;
-      case '1':
-        alipay.deg = 315; 
-        break;
+      int drivecmd = laptop_packetBuffer[1] - '0';
+      if (drivecmd > 0 && drivecmd < 9) { // 1,2,3,4,5,6,7,8
+        if (melty_parameters.invert == 1)
+          drivecmd = 8 - drivecmd;
+        else
+          drivecmd = drivecmd - 1;
+        alipay.deg = headings[drivecmd];
       }
 
-      if (laptop_packetBuffer[1] != '0') {// Check drive cmd for setting the "neutral" state
+      if (laptop_packetBuffer[1] != '0') { // Check drive cmd for setting the "neutral" state
         alipay.percentageOfRotation = melty_parameters.per;
       } else {
         alipay.percentageOfRotation = 0;
@@ -134,7 +122,7 @@ void loop()
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
       if (wasMeltying) { // Was previously meltybraining, we need to slowdown
         unsigned long timeout = millis();
-        while (abs(getAccelY()) > .3 && millis() - timeout < 2000) {
+        while (getAccelY() > .2 && millis() - timeout < 2000) {
           driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
           toggleLeds(CRGB::White, CRGB::Red, 150);
         }
@@ -158,7 +146,7 @@ void loop()
         break;
       case '3':
         lmotorpwr = tank_drive_parameters.turn;
-        rmotorpwr = -tank_drive_parameters.turn; 
+        // rmotorpwr = -tank_drive_parameters.turn; 
         break;
       case '4':
         lmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn;
@@ -173,7 +161,7 @@ void loop()
         rmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn; 
         break;
       case '7':
-        lmotorpwr = -tank_drive_parameters.turn;
+        // lmotorpwr = -tank_drive_parameters.turn;
         rmotorpwr = tank_drive_parameters.turn;  
         break;
       case '8':
@@ -204,8 +192,12 @@ void loop()
         }
       }
 
-      driveMotors.l_motor_write(-lmotorpwr);
-      driveMotors.r_motor_write(rmotorpwr);
+      int boostVal = 0;
+      if (laptop_packetBuffer[3] == '1')
+        boostVal = tank_drive_parameters.boost;
+
+      driveMotors.l_motor_write(-lmotorpwr - boostVal);
+      driveMotors.r_motor_write(rmotorpwr + boostVal);
       toggleLeds(CRGB::White, CRGB::Black, 500);
     
     } else { // Currently disabled
@@ -215,7 +207,7 @@ void loop()
           laptop.send(get3sVoltage());
         }
     }
-  } else {
+  } else { // Currently DISCONNECTED
     driveMotors.set_both_motors(0);
     toggleLeds(CRGB::Red, CRGB::Black, 500);
   }

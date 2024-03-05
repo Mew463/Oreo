@@ -21,4 +21,3 @@ class Drive_Motors {
     int l_motor_value = 0;
     int r_motor_value = 0;
 };
-

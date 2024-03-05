@@ -17,7 +17,6 @@ keyboard_thread.start()
 alipaycmd = ""
 irbeaconcmd = ""
 
-
 async def bluetooth_receive_handler(BLE_DEVICE):
     while True:
         await asyncio.sleep(0.1)
@@ -45,7 +44,7 @@ async def cmd_handler():
     drivestate = 1
     activeBeacon = 1
     while True:
-        x,y,drivecmd,alipaytuning,irbeacontuning = (0,)*5
+        x,y,drivecmd,alipaytuning,irbeacontuning,boost = (0,)*6
         
         if get_key_state(Key.up): 
             y = y + 1
@@ -116,8 +115,11 @@ async def cmd_handler():
             elif activeBeacon == 2:
                 activeBeacon = 1
         lastState = curState
+        
+        if (get_key_state(Key.shift)):
+            boost = 1
             
-        alipaycmd = f"{enabled}{drivecmd}{alipaytuning}000"
+        alipaycmd = f"{enabled}{drivecmd}{alipaytuning}{boost}00"
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         # print(alipaycmd)
         await asyncio.sleep(0.05)
@@ -126,7 +128,3 @@ async def main():
     await asyncio.gather(cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(alipay, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(alipay), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
 
 asyncio.run(main())
-
-    
-       
-                                

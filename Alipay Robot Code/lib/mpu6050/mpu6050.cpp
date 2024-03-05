@@ -19,7 +19,7 @@ void init_mpu6050() {
 float getAccelY() {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-    return (a.acceleration.y);
+    return (abs(a.acceleration.y));
 }
 
 float getAccelZ() {
