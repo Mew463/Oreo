@@ -75,7 +75,7 @@ class ringBuffer{
 class melty {
     public:
         melty();
-        void update();
+        bool update();
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
         bool translate();

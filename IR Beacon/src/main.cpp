@@ -5,7 +5,7 @@
 #include <BLE_Uart.h>
 #include <esp_now_txrx.h>
 
-#define TARGETCMD '1' // Change based on which IR_Beacon working on 
+#define TARGETCMD '2' // Change based on which IR_Beacon working on 
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -43,6 +43,26 @@ void loop(){
         if (laptop_packetBuffer[1] == TARGETCMD) {
           toggleLeds(CRGB::Blue, CRGB::Purple, 500);
           ledcWrite(ledChannel, dutycycle);
+
+          EVERY_N_MILLIS(100) {
+            switch (laptop_packetBuffer[2]) {
+              case '1':
+                dutycycle+=3;
+                if (dutycycle > maxdutycycle)
+                  dutycycle = maxdutycycle;
+                break;
+              case '2':
+                dutycycle-=3;
+                if (dutycycle < 0)
+                  dutycycle = 0;
+                break;
+            }
+            if (laptop_packetBuffer[2] == '1' || laptop_packetBuffer[2] == '2') {
+              String msg = "dutycycle : " + String(dutycycle);
+              laptop.send(msg);
+            }
+          }
+
         } else {
           setLeds(CRGB::Black);
           ledcWrite(ledChannel, 0);
@@ -53,26 +73,9 @@ void loop(){
         ledcWrite(ledChannel, 0);
         break;
     }
-    EVERY_N_MILLIS(100) {
-      if (laptop_packetBuffer[1] == TARGETCMD) {
-        switch (laptop_packetBuffer[2]) {
-          case '1':
-            dutycycle+=3;
-            if (dutycycle > maxdutycycle)
-              dutycycle = maxdutycycle;
-            break;
-          case '2':
-            dutycycle-=3;
-            if (dutycycle < 0)
-              dutycycle = 0;
-            break;
-        }
-        if (laptop_packetBuffer[2] == '1' || laptop_packetBuffer[2] == '2') {
-          String msg = "dutycycle : " + String(dutycycle);
-          laptop.send(msg);
-        }
-      }
-    }
+
+    
+    
   } else {
     toggleLeds(CRGB::Red, CRGB::Black, 500);
     ledcWrite(ledChannel, 0);

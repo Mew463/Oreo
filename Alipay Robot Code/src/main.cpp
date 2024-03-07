@@ -58,7 +58,13 @@ void loop()
     }
 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
-      alipay.update();
+      if (alipay.update()) { // If seen the LED
+        EVERY_N_MILLIS(250) {
+          laptop.send("seen");
+        }
+      }
+      
+      
       int boostVal = 0;
       if (laptop_packetBuffer[3] == '1')
         boostVal = melty_parameters.boost;
@@ -85,7 +91,7 @@ void loop()
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        String msg = "rpm : " + String(alipay.RPM);
+        String msg = "RPM : " + String(alipay.RPM);
         laptop.send(msg);
       }
 
@@ -122,7 +128,7 @@ void loop()
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
       if (wasMeltying) { // Was previously meltybraining, we need to slowdown
         unsigned long timeout = millis();
-        while (getAccelY() > .2 && millis() - timeout < 2000) {
+        while (getAccelY() > .3 && millis() - timeout < 2000) {
           driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
           toggleLeds(CRGB::White, CRGB::Red, 150);
         }

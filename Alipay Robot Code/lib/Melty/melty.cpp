@@ -6,7 +6,7 @@ melty::melty() {
     time_seen_beacon_calc = ringBuffer(0.5); 
 }
 
-void melty::update() {
+bool melty::update() {
     bool curSeenIRLed;
     if (useTopIr)
         curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
@@ -33,6 +33,7 @@ void melty::update() {
 
     
     lastSeenIRLed = curSeenIRLed;
+    return curSeenIRLed;
 }
 
 void melty::computeTimings() {
