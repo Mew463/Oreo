@@ -137,42 +137,48 @@ void loop()
       
       int lmotorpwr = 0;
       int rmotorpwr = 0;
+
+      int boostVal = 0;
+      if (laptop_packetBuffer[3] == '1')
+        boostVal = tank_drive_parameters.boost;
+
+
       switch (laptop_packetBuffer[1]) { // Check the drive cmd
       case '0':
         lmotorpwr = 0;
         rmotorpwr = 0;
         break;
       case '1':
-        lmotorpwr = tank_drive_parameters.drive;
-        rmotorpwr = tank_drive_parameters.drive;
+        lmotorpwr = tank_drive_parameters.drive + boostVal;
+        rmotorpwr = tank_drive_parameters.drive + boostVal;
         break;
       case '2':
-        lmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn;
-        rmotorpwr = tank_drive_parameters.drive; 
+        lmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn + boostVal;
+        rmotorpwr = tank_drive_parameters.drive + boostVal; 
         break;
       case '3':
-        lmotorpwr = tank_drive_parameters.turn;
+        lmotorpwr = tank_drive_parameters.turn + boostVal;
         // rmotorpwr = -tank_drive_parameters.turn; 
         break;
       case '4':
-        lmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn;
-        rmotorpwr = -tank_drive_parameters.drive;
+        lmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn - boostVal;
+        rmotorpwr = -tank_drive_parameters.drive - boostVal;
         break;
       case '5':
-        lmotorpwr = -tank_drive_parameters.drive;
-        rmotorpwr = -tank_drive_parameters.drive;
+        lmotorpwr = -tank_drive_parameters.drive - boostVal;
+        rmotorpwr = -tank_drive_parameters.drive - boostVal;
         break;
       case '6':
-        lmotorpwr = -tank_drive_parameters.drive;
-        rmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn; 
+        lmotorpwr = -tank_drive_parameters.drive - boostVal;
+        rmotorpwr = -tank_drive_parameters.drive - tank_drive_parameters.turn - boostVal; 
         break;
       case '7':
         // lmotorpwr = -tank_drive_parameters.turn;
-        rmotorpwr = tank_drive_parameters.turn;  
+        rmotorpwr = tank_drive_parameters.turn + boostVal;  
         break;
       case '8':
-        lmotorpwr = tank_drive_parameters.drive;
-        rmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn; 
+        lmotorpwr = tank_drive_parameters.drive + boostVal;
+        rmotorpwr = tank_drive_parameters.drive + tank_drive_parameters.turn + boostVal; 
         break;
       }
 
@@ -198,12 +204,8 @@ void loop()
         }
       }
 
-      int boostVal = 0;
-      if (laptop_packetBuffer[3] == '1')
-        boostVal = tank_drive_parameters.boost;
-
-      driveMotors.l_motor_write(-lmotorpwr - boostVal);
-      driveMotors.r_motor_write(rmotorpwr + boostVal);
+      driveMotors.l_motor_write(-lmotorpwr);
+      driveMotors.r_motor_write(rmotorpwr);
       toggleLeds(CRGB::White, CRGB::Black, 500);
     
     } else { // Currently disabled

@@ -60,7 +60,6 @@ async def ir_beacon_switcher():
             lastBeaconRead = millis() + 2000 # Add some time so the beacon doesnt switch right after enabling melty brain mode
         if (enabled == 1 and millis() - lastBeaconRead > 1000 and ir_beacon_2.isConnected == True):
             toggleBeacon()
-            # await asyncio.sleep(1)
             
 def toggleBeacon():
     global activeBeacon
