@@ -7,3 +7,5 @@ float getAccelY();
 float getAccelZ();
 
 float getTemp();
+
+float getGyroZ();

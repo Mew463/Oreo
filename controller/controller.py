@@ -142,6 +142,8 @@ async def cmd_handler():
                 enabled = drivestate = 1
             if (get_key_state('x')):
                 enabled = drivestate = 2
+            if (get_key_state('c')):
+                enabled = drivestate = 3 
         
         curState = get_key_state('1')
         if curState and not lastState:

@@ -33,3 +33,11 @@ float getTemp() {
     mpu.getEvent(&a, &g, &temp);
     return (temp.temperature);
 }
+
+float getGyroZ() {
+    static float heading = 0;
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+    heading += g.orientation.z;
+    return (heading);
+}

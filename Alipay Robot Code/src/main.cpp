@@ -5,6 +5,7 @@
 #include <Battery_Monitor.h>
 #include <melty.h> 
 #include <BLE_Uart.h>
+#include <PID.h>
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -29,6 +30,12 @@ struct tank_drive_parameters {
   int turn = 2;
   int boost = 2;
 } tank_drive_parameters;
+
+struct pid_tank_drive_parameters {
+  int drive = 2;
+  int headingTurn = 2.3;
+  int boost = 2;
+} pid_tank_drive_parameters;
 
 void setup()
 {
@@ -208,6 +215,92 @@ void loop()
       driveMotors.r_motor_write(rmotorpwr);
       toggleLeds(CRGB::White, CRGB::Black, 500);
     
+    } else if (laptop_packetBuffer[0] == '3'){ // Tank driving mode + PID!
+      int lmotorpwr;
+      int rmotorpwr;
+      static float desiredHeading;
+      int pidOutput = 0;
+
+      int boostVal = 0;
+      if (laptop_packetBuffer[3] == '1')
+        boostVal = pid_tank_drive_parameters.boost;
+
+      switch (laptop_packetBuffer[1]) { // Check the drive cmd
+      case '0':
+        lmotorpwr = 0;
+        rmotorpwr = 0;
+        desiredHeading = getGyroZ();
+        break;
+      case '8':
+        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        desiredHeading+=pid_tank_drive_parameters.headingTurn;
+        break;
+      case '1':
+        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        break;
+      case '2':
+        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
+        desiredHeading-=pid_tank_drive_parameters.headingTurn;
+        break;
+
+      case '4':
+        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        desiredHeading+=pid_tank_drive_parameters.headingTurn;
+        break;
+      case '5':
+        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        break;
+      case '6':
+        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
+        desiredHeading-=pid_tank_drive_parameters.headingTurn;
+        break;
+      }
+
+      if (laptop_packetBuffer[1] != '0') // We want to drive, therefore start calculating pidout
+        pidOutput = calcTurnPower(desiredHeading - getGyroZ());
+
+      EVERY_N_MILLIS(10) {
+        driveMotors.l_motor_write(- lmotorpwr + pidOutput);
+        driveMotors.r_motor_write(rmotorpwr + pidOutput);
+      }
+      
+      toggleLeds(CRGB::Green, CRGB::Blue, 500);
+
+      EVERY_N_MILLIS(100) {
+        switch (laptop_packetBuffer[2]) {
+          case '1':
+            PID.kP+=.001;
+            break;
+          case '2':
+            PID.kP-=.001;
+            break;
+          case '3':
+            PID.kI+=.01;
+            break;
+          case '4':
+            PID.kI-=.01;
+            break;
+          case '5':
+            PID.kD+=.001;
+            break;
+          case '6':
+            PID.kD-=.001;
+            break;
+        }
+
+        if (laptop_packetBuffer[2] != '0') {
+          String msg = "kP : " + String(PID.kP, 3) + " kI : " + String(PID.kI ,3) + " kD : " + String(PID.kD, 3);
+          laptop.send(msg);
+        }
+      }
+
+
     } else { // Currently disabled
       toggleLeds(CRGB::Red, CRGB::Green, 500);
       driveMotors.set_both_motors(0); 
@@ -219,4 +312,8 @@ void loop()
     driveMotors.set_both_motors(0);
     toggleLeds(CRGB::Red, CRGB::Black, 500);
   }
+
+  
+
+  
 }
