@@ -53,6 +53,8 @@ class ringBuffer{
             return maxVal;
         }
 
+        
+
     private:
         unsigned long ringBuf[RINGBUFSIZE];
         int curIndex = 0;
@@ -83,6 +85,9 @@ class melty {
         int deg = 0;
         float percentageOfRotation = 0;
         bool useTopIr = 1;
+
+        ringBuffer photo_resistor_vals = ringBuffer(1);
+
     private:
         bool lastSeenIRLed = 0;
         unsigned long period_micros = micros();

@@ -4,6 +4,7 @@
 melty::melty() {
     period_micros_calc = ringBuffer(1);
     time_seen_beacon_calc = ringBuffer(0.5); 
+    photo_resistor_vals = ringBuffer(1);
 }
 
 bool melty::update() {
@@ -20,6 +21,7 @@ bool melty::update() {
             period_micros = currentPulse - lastPulse; // How long it takes to complete one revolution
             period_micros_calc.update(period_micros);
             lastPulse = currentPulse;
+
         }
         else { // Activates on the falling edge of seeing the IR LED
             setLeds(CRGB::Red);
@@ -31,6 +33,8 @@ bool melty::update() {
             }
         }
 
+    if (curSeenIRLed)
+        photo_resistor_vals.update(analogRead(BOTTOM_IR_PIN));
     
     lastSeenIRLed = curSeenIRLed;
     return curSeenIRLed;

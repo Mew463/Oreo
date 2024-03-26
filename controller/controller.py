@@ -88,7 +88,7 @@ async def cmd_handler():
         if get_key_state(Key.left):
             x = x - 1
         if get_key_state(Key.right): 
-            x = x + 1
+            x = x + 1 
             
         if x == 0 and y == 0:
             drivecmd = 0

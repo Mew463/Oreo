@@ -3,7 +3,7 @@
 
 SerialHandler myComputer = SerialHandler(); 
 
-const int motpin = 8; // 7 is right and 8 is left
+const int motpin = 7; // 7 is right and 8 is left
 const int motchannel = 0;
 const int neutralVal = 189;
 

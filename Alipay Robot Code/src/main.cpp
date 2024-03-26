@@ -40,11 +40,17 @@ struct pid_tank_drive_parameters {
 void setup()
 {
   init_led();
-  setLeds(CRGB::Green);
+  for (int i = 0; i < 10; i++) {
+    setLeds(CRGB::Orange);
+    delay(50);
+  }
   USBSerial.begin(115200);
-  init_mpu6050();
+  // init_mpu6050();
+  USBSerial.println("init mpu6050");
   driveMotors.init_motors();
+  USBSerial.println("init motors");
   laptop.init_ble("Alipay");
+  USBSerial.println("init laptop");
   setLeds(CRGB::Black); 
 }
  
@@ -52,16 +58,16 @@ void loop()
 {
   if (laptop.isConnected()) {
     if (driveMotors.isNeutral()) {
-      if (getAccelZ() > 7) {
+      // if (getAccelZ() > 7) {
         alipay.useTopIr = 1;
         driveMotors.flip_motors = 0;
         melty_parameters.invert = 1;
-      }
-      if (getAccelZ() < -7) {
-        alipay.useTopIr = 0;
-        driveMotors.flip_motors = 1;
-        melty_parameters.invert = -1;
-      }
+      // }
+      // if (getAccelZ() < -7) {
+      //   alipay.useTopIr = 0;
+      //   driveMotors.flip_motors = 1;
+      //   melty_parameters.invert = -1;
+      // }
     }
 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
@@ -98,7 +104,7 @@ void loop()
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        String msg = "RPM : " + String(alipay.RPM);
+        String msg = "PR IR_LED: " + String(alipay.photo_resistor_vals.getMaxVal());
         laptop.send(msg);
       }
 
@@ -133,14 +139,14 @@ void loop()
       wasMeltying = 1;
 
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
-      if (wasMeltying) { // Was previously meltybraining, we need to slowdown
-        unsigned long timeout = millis();
-        while (getAccelY() > .3 && millis() - timeout < 2000) {
-          driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
-          toggleLeds(CRGB::White, CRGB::Red, 150);
-        }
-        wasMeltying = 0;
-      }
+      // if (wasMeltying) { // Was previously meltybraining, we need to slowdown
+      //   unsigned long timeout = millis();
+      //   while (getAccelY() > .3 && millis() - timeout < 2000) {
+      //     driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
+      //     toggleLeds(CRGB::White, CRGB::Red, 150);
+      //   }
+      //   wasMeltying = 0;
+      // }
       
       int lmotorpwr = 0;
       int rmotorpwr = 0;
@@ -229,7 +235,7 @@ void loop()
       case '0':
         lmotorpwr = 0;
         rmotorpwr = 0;
-        desiredHeading = getGyroZ();
+        // desiredHeading = getGyroZ();
         break;
       case '8':
         lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
@@ -262,8 +268,8 @@ void loop()
         break;
       }
 
-      if (laptop_packetBuffer[1] != '0') // We want to drive, therefore start calculating pidout
-        pidOutput = calcTurnPower(desiredHeading - getGyroZ());
+      // if (laptop_packetBuffer[1] != '0') // We want to drive, therefore start calculating pidout
+      //   pidOutput = calcTurnPower(desiredHeading - getGyroZ());
 
       EVERY_N_MILLIS(10) {
         driveMotors.l_motor_write(- lmotorpwr + pidOutput);
