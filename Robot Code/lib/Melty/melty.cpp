@@ -16,7 +16,7 @@ bool melty::update() {
 
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
-            setLeds(CRGB::Green);
+            setLeds(GREEN);
             currentPulse = micros();
             period_micros = currentPulse - lastPulse; // How long it takes to complete one revolution
             period_micros_calc.update(period_micros);
@@ -24,7 +24,7 @@ bool melty::update() {
 
         }
         else { // Activates on the falling edge of seeing the IR LED
-            setLeds(CRGB::Red);
+            setLeds(RED);
             time_seen_beacon = micros() - currentPulse;
             time_seen_beacon_calc.update(time_seen_beacon);
             

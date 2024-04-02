@@ -6,6 +6,7 @@
 #include <melty.h> 
 #include <BLE_Uart.h>
 #include <PID.h>
+#include <FastLED.h>
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -41,7 +42,7 @@ void setup()
 {
   init_led();
   for (int i = 0; i < 10; i++) {
-    setLeds(CRGB::Orange);
+    setLeds(ORANGE);
     delay(50);
   }
   USBSerial.begin(115200);
@@ -51,7 +52,7 @@ void setup()
   USBSerial.println("init motors");
   laptop.init_ble("Alipay");
   USBSerial.println("init laptop");
-  setLeds(CRGB::Black); 
+  setLeds(BLACK); 
 }
  
 void loop()
@@ -219,7 +220,7 @@ void loop()
 
       driveMotors.l_motor_write(-lmotorpwr);
       driveMotors.r_motor_write(rmotorpwr);
-      toggleLeds(CRGB::White, CRGB::Black, 500);
+      toggleLeds(WHITE, BLACK, 500);
     
     } else if (laptop_packetBuffer[0] == '3'){ // Tank driving mode + PID!
       int lmotorpwr;
@@ -276,7 +277,7 @@ void loop()
         driveMotors.r_motor_write(rmotorpwr + pidOutput);
       }
       
-      toggleLeds(CRGB::Green, CRGB::Blue, 500);
+      toggleLeds(GREEN, BLUE, 500);
 
       EVERY_N_MILLIS(100) {
         switch (laptop_packetBuffer[2]) {
@@ -308,7 +309,7 @@ void loop()
 
 
     } else { // Currently disabled
-      toggleLeds(CRGB::Red, CRGB::Green, 500);
+      toggleLeds(RED, GREEN, 500);
       driveMotors.set_both_motors(0); 
         EVERY_N_SECONDS(10) {
           laptop.send(get3sVoltage());
@@ -316,7 +317,11 @@ void loop()
     }
   } else { // Currently DISCONNECTED
     driveMotors.set_both_motors(0);
-    toggleLeds(CRGB::Red, CRGB::Black, 500);
+    toggleLeds(RED, BLACK, 500);
+    // setLeds(RED);
+    // delay(500);
+    // setLeds(BLACK);
+    // delay(500);
   }
 
   
