@@ -18,8 +18,8 @@ enum Colors {
 	BLUE,
 	PURPLE,
 	RED_PURPLE,
-    BLACK,
-    WHITE
+	BLACK,
+	WHITE
 };
 
 void init_led();

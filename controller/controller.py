@@ -1,5 +1,4 @@
 # `sudo pkill bluetoothd` if bluetooth not working on ming's mac m3 pro
-
 import threading
 from LaptopKeyboard import *
 from bluetooth import *

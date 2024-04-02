@@ -40,18 +40,13 @@ struct pid_tank_drive_parameters {
 
 void setup()
 {
-  init_led();
-  for (int i = 0; i < 10; i++) {
-    setLeds(ORANGE);
-    delay(50);
-  }
   USBSerial.begin(115200);
   // init_mpu6050();
-  USBSerial.println("init mpu6050");
-  driveMotors.init_motors();
-  USBSerial.println("init motors");
+  driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
+  init_led();
+  setLeds(ORANGE);
+  driveMotors.arm_motors();
   laptop.init_ble("Alipay");
-  USBSerial.println("init laptop");
   setLeds(BLACK); 
 }
  
@@ -318,10 +313,6 @@ void loop()
   } else { // Currently DISCONNECTED
     driveMotors.set_both_motors(0);
     toggleLeds(RED, BLACK, 500);
-    // setLeds(RED);
-    // delay(500);
-    // setLeds(BLACK);
-    // delay(500);
   }
 
   

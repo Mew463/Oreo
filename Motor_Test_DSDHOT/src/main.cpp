@@ -23,7 +23,7 @@ enum Colors {
 	BLUE,
 	PURPLE,
 	RED_PURPLE,
-} Colors;
+};
 
 void setLed(int colorWheel) {
 	strip.setLedColorData(0, strip.hsv2rgb(colorWheel*30, 100, 100));
@@ -56,12 +56,13 @@ void setup()
 	}
 
 	int mydelay = 10;
-	for (int i = 0; i < 3000/mydelay; i++)
+	for (int i = 0; i < 100/mydelay; i++)
 	{
 		rmot.sendThrottle3D(0);
-		lmot.sendThrottle(0);
+		lmot.sendThrottle3D(0);
 		delay(mydelay);
 	}
+	// delay(3000);
 	USBSerial.println("Armed!!!");
 }
 
