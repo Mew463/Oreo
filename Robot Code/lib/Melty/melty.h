@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include <mpu6050.h>
-
-#define RINGBUFSIZE 5
+#include <adxl375.h>
 
 class ringBuffer{
     public:
@@ -10,7 +8,9 @@ class ringBuffer{
          *
          * @param _criteria How close should the new value match the max value from the ring buffer to be considered legit?
          */
-        ringBuffer(float _criteria) {
+        ringBuffer(unsigned long *_ringBuf, int _arraysize, float _criteria) {
+            ringBuf = _ringBuf;
+            arraySize = _arraysize;
             criteria = _criteria;
         }
 
@@ -23,7 +23,7 @@ class ringBuffer{
          */
         void update(unsigned long val) {
             ringBuf[curIndex++] = val;
-            if (curIndex > RINGBUFSIZE-1)
+            if (curIndex > arraySize-1)
                 curIndex = 0;
         }
 
@@ -47,32 +47,46 @@ class ringBuffer{
          */
         unsigned long getMaxVal() {
             unsigned long maxVal = 0;
-            for (int i = 0; i < RINGBUFSIZE; i++)
+            for (int i = 0; i < arraySize; i++)
                 if (maxVal < ringBuf[i])
                     maxVal = ringBuf[i];
             return maxVal;
         }
 
-        
+        unsigned long getMinVal() {
+            unsigned long minVal = ringBuf[0];
+            for (int i = 1; i < arraySize; i++)
+                if (minVal > ringBuf[i])
+                    minVal = ringBuf[i];
+            if (minVal == 0)
+                minVal = 1;
+            return minVal;
+        }
 
-    private:
-        unsigned long ringBuf[RINGBUFSIZE];
-        int curIndex = 0;
-        float criteria = 0;
         String returnArray() { // For debug purposes
             String msg = "";
-            for (int i = 0; i < RINGBUFSIZE; i++) {
+            for (int i = 0; i < arraySize; i++) {
                 msg = msg + String(ringBuf[i]) + " ";
             }
             return msg;
         }
+
+        
+
+    private:
+        unsigned long *ringBuf;
+        int arraySize;
+
+        int curIndex = 0;
+        float criteria = 0;
+        
 };
 
 
 
-#define TOP_IR_PIN      10
-#define BOTTOM_IR_PIN   9
-#define IRLedDataSize   25 // Size of our Ring Buffer that will hold the IR Led data 
+#define TOP_IR_PIN      9
+#define BOTTOM_IR_PIN   10
+#define IRLedDataSize   40  // Size of our Ring Buffer that will hold the IR Led data 
 
 class melty {
     public:
@@ -86,7 +100,11 @@ class melty {
         float percentageOfRotation = 0;
         bool useTopIr = 1;
 
-        ringBuffer photo_resistor_vals = ringBuffer(1);
+        unsigned long period_micros_calc_array[20] = {0};
+        ringBuffer period_micros_calc;
+
+        unsigned long time_seen_beacon_calc_array[10] = {0};
+        ringBuffer time_seen_beacon_calc;
 
     private:
         bool lastSeenIRLed = 0;
@@ -103,9 +121,9 @@ class melty {
 
         bool timingToggle = 0;
 
-        ringBuffer period_micros_calc;
-        ringBuffer time_seen_beacon_calc;
+        
 
         const int us_per_min = 60000000;
 };
 
+ 

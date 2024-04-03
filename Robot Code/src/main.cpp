@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <LEDHandler.h>
-#include <mpu6050.h>
+#include <adxl375.h>
 #include <Drive_Motors.h>
 #include <Battery_Monitor.h>
 #include <melty.h> 
@@ -17,36 +17,30 @@ int slowDownSpeed = 8;
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors();
 
-melty alipay = melty();
+melty oreo = melty();
 struct melty_parameters {
-  int rot = 6;
-  int tra = 6;
+  int rot = 80;
+  int tra = 60;
   float per = 0.5;
   int invert = 1;
   int boost = 5;
 } melty_parameters;
 
 struct tank_drive_parameters {
-  int drive = 2;
-  int turn = 2;
-  int boost = 2;
+  int drive = 40;
+  int turn = 20;
+  int boost = 40;
 } tank_drive_parameters;
-
-struct pid_tank_drive_parameters {
-  int drive = 2;
-  int headingTurn = 2.3;
-  int boost = 2;
-} pid_tank_drive_parameters;
 
 void setup()
 {
   USBSerial.begin(115200);
-  // init_mpu6050();
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
   init_led();
   setLeds(ORANGE);
+  init_adxl375();
   driveMotors.arm_motors();
-  laptop.init_ble("Alipay");
+  laptop.init_ble("oreo");
   setLeds(BLACK); 
 }
  
@@ -55,19 +49,19 @@ void loop()
   if (laptop.isConnected()) {
     if (driveMotors.isNeutral()) {
       // if (getAccelZ() > 7) {
-        alipay.useTopIr = 1;
+        oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
         melty_parameters.invert = 1;
       // }
       // if (getAccelZ() < -7) {
-      //   alipay.useTopIr = 0;
+      //   oreo.useTopIr = 0;
       //   driveMotors.flip_motors = 1;
       //   melty_parameters.invert = -1;
       // }
     }
 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
-      if (alipay.update()) { // If seen the LED
+      if (oreo.update()) { // If seen the LED
         EVERY_N_MILLIS(250) {
           laptop.send("seen");
         }
@@ -77,7 +71,7 @@ void loop()
       int boostVal = 0;
       if (laptop_packetBuffer[3] == '1')
         boostVal = melty_parameters.boost;
-      if (alipay.translate()) {
+      if (oreo.translate()) {
         driveMotors.l_motor_write(melty_parameters.invert * (melty_parameters.rot - (melty_parameters.tra + boostVal)));
         driveMotors.r_motor_write(melty_parameters.invert * (melty_parameters.rot + (melty_parameters.tra + boostVal)));
       } else {
@@ -90,33 +84,34 @@ void loop()
           drivecmd = 8 - drivecmd;
         else
           drivecmd = drivecmd - 1;
-        alipay.deg = headings[drivecmd];
+        oreo.deg = headings[drivecmd];
       }
 
       if (laptop_packetBuffer[1] != '0') { // Check drive cmd for setting the "neutral" state
-        alipay.percentageOfRotation = melty_parameters.per;
+        oreo.percentageOfRotation = melty_parameters.per;
       } else {
-        alipay.percentageOfRotation = 0;
+        oreo.percentageOfRotation = 0;
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        String msg = "PR IR_LED: " + String(alipay.photo_resistor_vals.getMaxVal());
+        String msg = "Beacon RPM: " + String(oreo.RPM) + " time seen beacon: " + oreo.time_seen_beacon_calc.returnArray();//" Accel: " + String(getAccelY());
         laptop.send(msg);
       }
 
       EVERY_N_MILLIS(100) {
+        int tuningValue = 5;
         switch (laptop_packetBuffer[2]) {
           case '1':
-            melty_parameters.rot++;
+            melty_parameters.rot+=tuningValue;
             break;
           case '2':
-            melty_parameters.rot--;
+            melty_parameters.rot-=tuningValue;
             break;
           case '3':
-            melty_parameters.tra++;
+            melty_parameters.tra+=tuningValue;
             break;
           case '4':
-            melty_parameters.tra--;
+            melty_parameters.tra-=tuningValue;
             break;
           case '5':
             melty_parameters.per = melty_parameters.per + .03;
@@ -217,92 +212,6 @@ void loop()
       driveMotors.r_motor_write(rmotorpwr);
       toggleLeds(WHITE, BLACK, 500);
     
-    } else if (laptop_packetBuffer[0] == '3'){ // Tank driving mode + PID!
-      int lmotorpwr;
-      int rmotorpwr;
-      static float desiredHeading;
-      int pidOutput = 0;
-
-      int boostVal = 0;
-      if (laptop_packetBuffer[3] == '1')
-        boostVal = pid_tank_drive_parameters.boost;
-
-      switch (laptop_packetBuffer[1]) { // Check the drive cmd
-      case '0':
-        lmotorpwr = 0;
-        rmotorpwr = 0;
-        // desiredHeading = getGyroZ();
-        break;
-      case '8':
-        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        desiredHeading+=pid_tank_drive_parameters.headingTurn;
-        break;
-      case '1':
-        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        break;
-      case '2':
-        lmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        rmotorpwr = pid_tank_drive_parameters.drive +boostVal;
-        desiredHeading-=pid_tank_drive_parameters.headingTurn;
-        break;
-
-      case '4':
-        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        desiredHeading+=pid_tank_drive_parameters.headingTurn;
-        break;
-      case '5':
-        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        break;
-      case '6':
-        lmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        rmotorpwr = -pid_tank_drive_parameters.drive -boostVal;
-        desiredHeading-=pid_tank_drive_parameters.headingTurn;
-        break;
-      }
-
-      // if (laptop_packetBuffer[1] != '0') // We want to drive, therefore start calculating pidout
-      //   pidOutput = calcTurnPower(desiredHeading - getGyroZ());
-
-      EVERY_N_MILLIS(10) {
-        driveMotors.l_motor_write(- lmotorpwr + pidOutput);
-        driveMotors.r_motor_write(rmotorpwr + pidOutput);
-      }
-      
-      toggleLeds(GREEN, BLUE, 500);
-
-      EVERY_N_MILLIS(100) {
-        switch (laptop_packetBuffer[2]) {
-          case '1':
-            PID.kP+=.001;
-            break;
-          case '2':
-            PID.kP-=.001;
-            break;
-          case '3':
-            PID.kI+=.01;
-            break;
-          case '4':
-            PID.kI-=.01;
-            break;
-          case '5':
-            PID.kD+=.001;
-            break;
-          case '6':
-            PID.kD-=.001;
-            break;
-        }
-
-        if (laptop_packetBuffer[2] != '0') {
-          String msg = "kP : " + String(PID.kP, 3) + " kI : " + String(PID.kI ,3) + " kD : " + String(PID.kD, 3);
-          laptop.send(msg);
-        }
-      }
-
-
     } else { // Currently disabled
       toggleLeds(RED, GREEN, 500);
       driveMotors.set_both_motors(0); 

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 float get3sVoltage() {
-    return (float(analogRead(18)) / 4096)*3.1 * 3.95 * 1.0175;
+    return (float(analogRead(18)) / 4096)*3.1 * 4.1 * 1.01;
 }
 
 float get1sVoltage() {

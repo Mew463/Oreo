@@ -2,9 +2,8 @@
 #include <LEDHandler.h>
 
 melty::melty() {
-    period_micros_calc = ringBuffer(1);
-    time_seen_beacon_calc = ringBuffer(0.5); 
-    photo_resistor_vals = ringBuffer(1);
+    period_micros_calc = ringBuffer(period_micros_calc_array, 5, 1);
+    time_seen_beacon_calc = ringBuffer(time_seen_beacon_calc_array, 10, 0.75); 
 }
 
 bool melty::update() {
@@ -16,32 +15,28 @@ bool melty::update() {
 
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED
-            setLeds(GREEN);
+            setLeds(BLUE);
             currentPulse = micros();
-            period_micros = currentPulse - lastPulse; // How long it takes to complete one revolution
-            period_micros_calc.update(period_micros);
-            lastPulse = currentPulse;
-
         }
         else { // Activates on the falling edge of seeing the IR LED
-            setLeds(RED);
+            setLeds(YELLOW);
             time_seen_beacon = micros() - currentPulse;
             time_seen_beacon_calc.update(time_seen_beacon);
-            
             if (time_seen_beacon_calc.isLegit(time_seen_beacon)) { // && period_micros_calc.isLegit(period_micros) 
+                unsigned long curMicros = micros();
+                period_micros = curMicros - lastPulse; // How long it takes to complete one revolution
+                period_micros_calc.update(period_micros);
+                lastPulse = curMicros;
                 computeTimings();
             }
         }
-
-    if (curSeenIRLed)
-        photo_resistor_vals.update(analogRead(BOTTOM_IR_PIN));
     
     lastSeenIRLed = curSeenIRLed;
     return curSeenIRLed;
 }
 
 void melty::computeTimings() {
-    unsigned long max_period = period_micros_calc.getMaxVal();
+    unsigned long max_period = period_micros_calc.getMinVal();
     RPM = (us_per_min)/(max_period);
     unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
     unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*max_period; // Direction that we should be driving towards

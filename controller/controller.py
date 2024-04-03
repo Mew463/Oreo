@@ -12,14 +12,14 @@ def millis():
 
 ir_beacon_2 = BLE_UART(peripheral_name='IR Beacon 2', address = 'CBB4A195-F34C-E6C5-21CD-ACBB7D44352A')
 ir_beacon_1 = BLE_UART(peripheral_name='IR Beacon 1', address = 'CC80B9F1-FE04-64E9-2CE8-014A24EEE1BF')
-alipay = BLE_UART(peripheral_name='Alipay', address = 'BCF4B026-C413-FC75-D78E-DE567078A888')
+oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
 
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
 keyboard_thread.daemon = True
 keyboard_thread.start()  
 
-alipaycmd = ""
+oreocmd = ""
 irbeaconcmd = ""
 enabled = 0
 activeBeacon = 1
@@ -43,7 +43,7 @@ async def bluetooth_comm_handler(BLE_DEVICE, isMainRobot):
         await asyncio.sleep(0.05)
         if (BLE_DEVICE.isConnected):
             if (isMainRobot):
-                await BLE_DEVICE.write(alipaycmd)
+                await BLE_DEVICE.write(oreocmd)
             else:
                 await BLE_DEVICE.write(irbeaconcmd)
         else:  
@@ -70,7 +70,7 @@ def toggleBeacon():
         activeBeacon = 1
             
 async def cmd_handler():
-    global alipaycmd
+    global oreocmd
     global irbeaconcmd
     global enabled
     global activeBeacon
@@ -78,7 +78,7 @@ async def cmd_handler():
     lastState = 0
     drivestate = 1
     while True:
-        x,y,drivecmd,alipaytuning,irbeacontuning,boost = (0,)*6  
+        x,y,drivecmd,oreotuning,irbeacontuning,boost = (0,)*6  
         
         if get_key_state(Key.up): 
             y = y + 1
@@ -109,17 +109,17 @@ async def cmd_handler():
             drivecmd = 8
             
         if get_key_state('q'):
-            alipaytuning = 1
+            oreotuning = 1
         elif get_key_state('a'):
-            alipaytuning = 2
+            oreotuning = 2
         elif get_key_state('w'):
-            alipaytuning = 3
+            oreotuning = 3
         elif get_key_state('s'):
-            alipaytuning = 4
+            oreotuning = 4
         elif get_key_state('e'):
-            alipaytuning = 5
+            oreotuning = 5
         elif get_key_state('d'):
-            alipaytuning = 6
+            oreotuning = 6
         
         if get_key_state('t'):
             irbeacontuning = 1
@@ -152,12 +152,12 @@ async def cmd_handler():
         if (get_key_state(Key.shift)):
             boost = 1
             
-        alipaycmd = f"{enabled}{drivecmd}{alipaytuning}{boost}00"
+        oreocmd = f"{enabled}{drivecmd}{oreotuning}{boost}00"
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
-        # print(alipaycmd)
+        # print(oreocmd)
         await asyncio.sleep(0.05)
 
 async def main():
-    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(alipay, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(alipay), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
 
 asyncio.run(main())
