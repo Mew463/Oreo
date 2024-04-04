@@ -1,11 +1,9 @@
-#include <Arduino.h>
 #include <LEDHandler.h>
 #include <adxl375.h>
 #include <Drive_Motors.h>
 #include <Battery_Monitor.h>
 #include <melty.h> 
 #include <BLE_Uart.h>
-#include <PID.h>
 #include <FastLED.h>
 
 const int packSize = 6;
@@ -20,7 +18,7 @@ Drive_Motors driveMotors = Drive_Motors();
 melty oreo = melty();
 struct melty_parameters {
   int rot = 80;
-  int tra = 60;
+  int tra = 80;
   float per = 0.5;
   int invert = 1;
   int boost = 5;
@@ -32,6 +30,8 @@ struct tank_drive_parameters {
   int boost = 40;
 } tank_drive_parameters;
 
+int tuningValue = 10;
+
 void setup()
 {
   USBSerial.begin(115200);
@@ -40,26 +40,24 @@ void setup()
   setLeds(ORANGE);
   init_adxl375();
   driveMotors.arm_motors();
-  laptop.init_ble("oreo");
+  laptop.init_ble("Oreo");
   setLeds(BLACK); 
 }
  
 void loop()
 {
   if (laptop.isConnected()) {
-    if (driveMotors.isNeutral()) {
-      // if (getAccelZ() > 7) {
+    EVERY_N_MILLIS(50) {
+      if (!isFlipped()) {
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
         melty_parameters.invert = 1;
-      // }
-      // if (getAccelZ() < -7) {
-      //   oreo.useTopIr = 0;
-      //   driveMotors.flip_motors = 1;
-      //   melty_parameters.invert = -1;
-      // }
+      } else {
+        oreo.useTopIr = 0;
+        driveMotors.flip_motors = 1;
+        melty_parameters.invert = -1;
+      }
     }
-
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
       if (oreo.update()) { // If seen the LED
         EVERY_N_MILLIS(250) {
@@ -94,12 +92,12 @@ void loop()
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        String msg = "Beacon RPM: " + String(oreo.RPM) + " time seen beacon: " + oreo.time_seen_beacon_calc.returnArray();//" Accel: " + String(getAccelY());
+        String msg = "RPM : " + String(oreo.RPM) + "AccelY : " + String(getAccelY());
         laptop.send(msg);
       }
 
       EVERY_N_MILLIS(100) {
-        int tuningValue = 5;
+        
         switch (laptop_packetBuffer[2]) {
           case '1':
             melty_parameters.rot+=tuningValue;
@@ -189,16 +187,16 @@ void loop()
       EVERY_N_MILLIS(100) {
         switch (laptop_packetBuffer[2]) {
           case '1':
-            tank_drive_parameters.drive++;
+            tank_drive_parameters.drive+=tuningValue;
             break;
           case '2':
-            tank_drive_parameters.drive--;
+            tank_drive_parameters.drive-=tuningValue;
             break;
           case '3':
-            tank_drive_parameters.turn++;
+            tank_drive_parameters.turn+=tuningValue;
             break;
           case '4':
-            tank_drive_parameters.turn--;
+            tank_drive_parameters.turn-=tuningValue;
             break;
         }
 

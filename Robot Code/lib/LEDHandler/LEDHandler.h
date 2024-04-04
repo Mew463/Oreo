@@ -1,4 +1,5 @@
 #include <Freenove_WS2812_Lib_for_ESP32.h>
+#include <FastLED.h>
 
 #ifdef IR_BEACON
     #define LEDPIN 5

@@ -11,7 +11,7 @@ def millis():
     return round((time.time()-startTime) * 1000)
 
 ir_beacon_2 = BLE_UART(peripheral_name='IR Beacon 2', address = 'CBB4A195-F34C-E6C5-21CD-ACBB7D44352A')
-ir_beacon_1 = BLE_UART(peripheral_name='IR Beacon 1', address = 'CC80B9F1-FE04-64E9-2CE8-014A24EEE1BF')
+ir_beacon_1 = BLE_UART(peripheral_name='IR Beacon 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
 oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
 
 

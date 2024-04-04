@@ -22,7 +22,7 @@ bool melty::update() {
             setLeds(YELLOW);
             time_seen_beacon = micros() - currentPulse;
             time_seen_beacon_calc.update(time_seen_beacon);
-            if (time_seen_beacon_calc.isLegit(time_seen_beacon)) { // && period_micros_calc.isLegit(period_micros) 
+            if (time_seen_beacon_calc.isLegit(time_seen_beacon)) { 
                 unsigned long curMicros = micros();
                 period_micros = curMicros - lastPulse; // How long it takes to complete one revolution
                 period_micros_calc.update(period_micros);
@@ -37,7 +37,10 @@ bool melty::update() {
 
 void melty::computeTimings() {
     unsigned long max_period = period_micros_calc.getMinVal();
-    RPM = (us_per_min)/(max_period);
+    int ledRPM = (us_per_min)/(max_period);
+    // int accelRPM = getAccelY() * ; // calculate the accelrometer rpm 
+    // Compare acclerometer rpm to the rpm calculated based on light, if its off but a certain margin
+    RPM = ledRPM;
     unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
     unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*max_period; // Direction that we should be driving towards
     unsigned long deltaDriveTiming = (percentageOfRotation * max_period)/2;

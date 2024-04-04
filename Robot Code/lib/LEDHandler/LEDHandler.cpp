@@ -15,31 +15,38 @@ void init_led() {
 }
 
 void setLeds(Colors color) {
-    if (color == BLACK)
-	    strip.setAllLedsColorData(0, 0, 0);
-	else if (color == WHITE)
-        strip.setAllLedsColorData(255, 255, 255);
-    else 
-        strip.setAllLedsColorData(strip.hsv2rgb(color*30, 100, 100));
-    // delay(1);
-    strip.show();
+    static unsigned long lastLedShowing = 0;
+    if (millis() - lastLedShowing > 5) {
+        if (color == BLACK)
+            strip.setAllLedsColorData(0, 0, 0);
+        else if (color == WHITE)
+            strip.setAllLedsColorData(255, 255, 255);
+        else 
+            strip.setAllLedsColorData(strip.hsv2rgb(color*30, 100, 100)); 
+        strip.show();   
+        lastLedShowing = millis();
+    }
+    
 }
 
 void toggleLeds(Colors color1, Colors color2, int delayMS) {
-    if (color1 != lastColor1 || color2 != lastColor2 || millis() - lastdelayToggle > delayMS + 50) { // For color syncing purposes between different devices
+    if (color1 != lastColor1 || color2 != lastColor2 || millis() - lastdelayToggle > delayMS + 50) { 
         lastdelayToggle = millis(); 
         ledToggleState = 0;
+        setLeds(color1);
     }
     currentDelayToggle = millis();
     
     if (currentDelayToggle - lastdelayToggle > delayMS) {
         ledToggleState = !ledToggleState;
         lastdelayToggle = currentDelayToggle;
-        if (ledToggleState) 
-            setLeds(color1);
-        else
-            setLeds(color2);
     }
+
+    if (ledToggleState) 
+        setLeds(color1);
+    else
+        setLeds(color2);
+
     lastColor1 = color1;
     lastColor2 = color2;
 }
