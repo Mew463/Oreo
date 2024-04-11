@@ -10,8 +10,8 @@ startTime = time.time()
 def millis():
     return round((time.time()-startTime) * 1000)
 
-ir_beacon_2 = BLE_UART(peripheral_name='IR Beacon 2', address = 'CBB4A195-F34C-E6C5-21CD-ACBB7D44352A')
-ir_beacon_1 = BLE_UART(peripheral_name='IR Beacon 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
+ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '642D48B0-0DA1-AB00-2DDD-B639F5353E80')
+ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
 oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
 
 
@@ -49,7 +49,7 @@ async def bluetooth_comm_handler(BLE_DEVICE, isMainRobot):
         else:  
             await BLE_DEVICE.connect()
 
-            
+              
 async def ir_beacon_switcher(): 
     global enabled
     global lastBeaconRead  
@@ -57,7 +57,7 @@ async def ir_beacon_switcher():
         await asyncio.sleep(0.1)
         if (enabled != 1):
             lastBeaconRead = millis() + 2000 # Add some time so the beacon doesnt switch right after enabling melty brain mode
-        if (enabled == 1 and millis() - lastBeaconRead > 1000 and ir_beacon_2.isConnected == True):
+        if (enabled == 1 and millis() - lastBeaconRead > 1000 and ir_beacon_2.isConnected == True and ir_beacon_1.isConnected):
             toggleBeacon()
             
 def toggleBeacon():
@@ -137,12 +137,10 @@ async def cmd_handler():
             waitForEnableReleased = 0
         
         if (enabled != 0):
-            if (get_key_state('z')):
+            if (get_key_state('z') or get_key_state('Z')):
                 enabled = drivestate = 1
-            if (get_key_state('x')):
+            if (get_key_state('x') or get_key_state('X')):
                 enabled = drivestate = 2
-            if (get_key_state('c')):
-                enabled = drivestate = 3 
         
         curState = get_key_state('1')
         if curState and not lastState:
@@ -150,11 +148,10 @@ async def cmd_handler():
         lastState = curState
         
         if (get_key_state(Key.shift)):
-            boost = 1
+            boost = 1 
             
         oreocmd = f"{enabled}{drivecmd}{oreotuning}{boost}00"
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
-        # print(oreocmd)
         await asyncio.sleep(0.05)
 
 async def main():

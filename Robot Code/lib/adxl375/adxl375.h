@@ -5,6 +5,8 @@
 
 void init_adxl375();
 
+void updateAccel();
+
 float getAccelY();
 
 float getAccelZ();

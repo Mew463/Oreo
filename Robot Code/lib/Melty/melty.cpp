@@ -3,7 +3,7 @@
 
 melty::melty() {
     period_micros_calc = ringBuffer(period_micros_calc_array, 5, 1);
-    time_seen_beacon_calc = ringBuffer(time_seen_beacon_calc_array, 10, 0.75); 
+    time_seen_beacon_calc = ringBuffer(time_seen_beacon_calc_array, TIME_SEEN_BEACON_ARRAY_SIZE, 0.7); 
 }
 
 bool melty::update() {
@@ -21,7 +21,9 @@ bool melty::update() {
         else { // Activates on the falling edge of seeing the IR LED
             setLeds(YELLOW);
             time_seen_beacon = micros() - currentPulse;
+            
             time_seen_beacon_calc.update(time_seen_beacon);
+
             if (time_seen_beacon_calc.isLegit(time_seen_beacon)) { 
                 unsigned long curMicros = micros();
                 period_micros = curMicros - lastPulse; // How long it takes to complete one revolution
@@ -36,27 +38,33 @@ bool melty::update() {
 }
 
 void melty::computeTimings() {
-    unsigned long max_period = period_micros_calc.getMinVal();
-    int ledRPM = (us_per_min)/(max_period);
-    // int accelRPM = getAccelY() * ; // calculate the accelrometer rpm 
-    // Compare acclerometer rpm to the rpm calculated based on light, if its off but a certain margin
-    RPM = ledRPM;
+    unsigned long rotation_period;
+    ledRPM = (us_per_min)/(period_micros_calc.getMinVal());
+    if (abs(ledRPM - accelRPM) < 50)
+        rotation_period = period_micros_calc.getMinVal();
+    else
+        rotation_period = acccel_period;
+
+        
     unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
-    unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*max_period; // Direction that we should be driving towards
-    unsigned long deltaDriveTiming = (percentageOfRotation * max_period)/2;
+    unsigned long centerOfDrivePulse =  center_of_beacon + (float(deg)/360)*rotation_period; // Direction that we should be driving towards
+    unsigned long deltaDriveTiming = (percentageOfRotation * rotation_period)/2;
 
     unsigned long offset = 0;
     if (centerOfDrivePulse - deltaDriveTiming < micros()) { // If we're supposed to start translating before we have calculated those values, offset by one rotation
-        offset = max_period;
+        offset = rotation_period;
     }
 
-    if (timingToggle) { // Swap variables that we use so we don't interfere (in the case that we're currently translating whilst computing)
-        startDrive = centerOfDrivePulse - deltaDriveTiming + offset;
-        endDrive = centerOfDrivePulse + deltaDriveTiming + offset;
-    } else { 
-        startDrive2  = centerOfDrivePulse - deltaDriveTiming + offset;
-        endDrive2 = centerOfDrivePulse + deltaDriveTiming + offset;
-    } 
+    for (int i = 0; i < TRANSLATE_TIMINGS_SIZE/2; i++) {
+        int index = 0;
+        if (timingToggle) 
+            index = i*2;
+        else    
+            index = i*2+1;
+
+        startDrive[index] = centerOfDrivePulse - deltaDriveTiming + offset + rotation_period*i;
+        endDrive[index] = centerOfDrivePulse + deltaDriveTiming + offset + rotation_period*i;
+    }
 
     timingToggle = !timingToggle; // Toggle it so that next iteration uses different variables 
 
@@ -64,8 +72,14 @@ void melty::computeTimings() {
 
 bool melty::translate() { // Returns whether or not robot should translate now
     unsigned long currentTime = micros();
-    if (percentageOfRotation != 0)
-        return (currentTime > startDrive && currentTime < endDrive || currentTime > startDrive2 && currentTime < endDrive2);
+        
+    if (percentageOfRotation != 0) {
+        for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
+            if (currentTime > startDrive[i] && currentTime < endDrive[i])
+                return 1;
+        }
+        return 0;
+    }
     else
         return 0;
 }
