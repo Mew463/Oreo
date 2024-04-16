@@ -4,7 +4,7 @@
 #include <BLE_Uart.h>
 #include <FastLED.h>
 
-#define TARGETCMD '2' // Change based on which IR_Beacon working on 
+#define TARGETCMD '1' // Change based on which IR_Beacon working on 
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -35,8 +35,9 @@ void loop(){
       case '0': // Disabled 
         toggleLeds(RED, GREEN, 500);
         ledcWrite(ledChannel, 0);
-        EVERY_N_SECONDS(10) 
-          laptop.send(get1sVoltage());
+        EVERY_N_SECONDS(10) {
+          laptop.send("SOC: " + String(get1sSOC()) + " %");
+        }
         break;
       case '1': // Enable one of the IR Beacons
         if (laptop_packetBuffer[1] == TARGETCMD) {

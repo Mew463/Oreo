@@ -41,7 +41,8 @@ class BLE_UART:
         self.isConnected = True
         
     async def disconnect(self):
-        print(f"Disconnected from {self._peripheral_name}")
+        if (self.isConnected != False):
+            print(f"Disconnected from {self._peripheral_name}")
         self.isConnected = False
         await self._client.disconnect()
         

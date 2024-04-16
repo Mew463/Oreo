@@ -14,11 +14,11 @@ int getPerc(int min, int max, int val) {
 int get3sSOC() {
     int max = 4096-20;
     int min = 3300;
-    // return analogRead(18);
     return getPerc(min, max ,analogRead(18));
 }
 
-float get1sVoltage() {
-    return (float(analogRead(18)) / 4096)*3.1 * 2.00 + .35;
+int get1sSOC() {
+    int max = 2585-50;
+    int min = 2048;
+    return getPerc(min, max ,analogRead(18));
 }
-

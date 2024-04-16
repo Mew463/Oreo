@@ -133,6 +133,8 @@ void loop()
           updateAccel();
           driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
           toggleLeds(WHITE, RED, 150);
+          if (laptop_packetBuffer[0] != '2')
+            break;
         }
         wasMeltying = 0;
       }
