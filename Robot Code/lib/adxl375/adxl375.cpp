@@ -20,24 +20,20 @@ void updateAccel() {
 }
 
 float getAccelY() {
-    // sensors_event_t event;
-    // accel.getEvent(&event);
     return (abs(event.acceleration.y));
 }
 
 float getAccelZ() {
-    // sensors_event_t event;
-    // accel.getEvent(&event);
-    return (event.acceleration.z-9.8);
+    return (event.acceleration.z);
 }
 
 bool isFlipped() {
     static bool isFlipped = 0;
-    long accelValueThreshold = 4;
+    long accelValueThreshold = 6;
     zRingBuffer.update(getAccelZ());
 
     if (!isFlipped) {
-        for (int i = 0; i < zAccelValuesSize; i++) 
+        for (int i = 0; i < zAccelValuesSize; i++)  // Negative values mean robot is NOT flipped
             if (zAccelValues[i] < -accelValueThreshold)
                 return 0;
     } else {

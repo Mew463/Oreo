@@ -82,22 +82,45 @@ void setup(void)
 {
   USBSerial.begin(115200);
   while (!USBSerial);
+  delay(1000);
   USBSerial.println("ADXL375 Accelerometer Test"); USBSerial.println("");
   Wire.begin(5,6);
   /* Initialise the sensor */
-  if(!accel.begin())
+  while(!accel.begin())
   {
     /* There was a problem detecting the ADXL375 ... check your connections */
     USBSerial.println("Ooops, no ADXL375 detected ... Check your wiring!");
-    while(1);
+    delay(100);
   }
 
   // Range is fixed at +-200g
 
   /* Display some basic information on this sensor */
-  accel.printSensorDetails();
-  displayDataRate();
-  USBSerial.println("");
+  accel.setTrimOffsets(0, 0, 0);
+  
+  USBSerial.println("Hold accelerometer flat to set offsets to 0, 0, and -1g...");
+  delay(1000);
+  int16_t x, y, z;
+  x = accel.getX();
+  y = accel.getY();
+  z = accel.getZ();
+  USBSerial.print("Raw X: "); USBSerial.print(x); USBSerial.print("  ");
+  USBSerial.print("Y: "); USBSerial.print(y); USBSerial.print("  ");
+  USBSerial.print("Z: "); USBSerial.print(z); USBSerial.print("  ");USBSerial.println(" counts");
+
+  // the trim offsets are in 'multiples' of 4, we want to round, so we add 2
+  accel.setTrimOffsets(-(x+2)/4, 
+                       -(y+2)/4, 
+                       -(z-20+2)/4);  // Z should be '20' at 1g (49mg per bit)
+  
+  int8_t x_offset, y_offset, z_offset;
+  accel.getTrimOffsets(&x_offset, &y_offset, &z_offset);
+  USBSerial.print("Current trim offsets: ");
+  USBSerial.print(x_offset);  USBSerial.print(", ");
+  USBSerial.print(y_offset);  USBSerial.print(", ");
+  USBSerial.println(z_offset);
+
+  USBSerial.println();
 }
 
 void loop(void)
@@ -110,5 +133,5 @@ void loop(void)
   USBSerial.print("X: "); USBSerial.print(event.acceleration.x); USBSerial.print("  ");
   USBSerial.print("Y: "); USBSerial.print(event.acceleration.y); USBSerial.print("  ");
   USBSerial.print("Z: "); USBSerial.print(event.acceleration.z); USBSerial.print("  ");USBSerial.println("m/s^2 ");
-  delay(100);
+  delay(250);
 }

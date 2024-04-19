@@ -10,7 +10,7 @@ const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
 bool wasMeltying = false;
-int slowDownSpeed = 120;
+int slowDownSpeed = 200;
 
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors();
