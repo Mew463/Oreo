@@ -17,8 +17,8 @@ Drive_Motors driveMotors = Drive_Motors();
 
 melty oreo = melty();
 struct melty_parameters {
-  int rot = 80;
-  int tra = 80;
+  int rot = 210;
+  int tra = 270;
   float per = 0.5;
   int invert = 1;
 } melty_parameters;
