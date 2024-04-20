@@ -10,10 +10,10 @@ startTime = time.time()
 def millis():
     return round((time.time()-startTime) * 1000)
 
-ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '642D48B0-0DA1-AB00-2DDD-B639F5353E80')
-ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
-oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
-hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = 'DB644862-A8E2-33B5-1D6E-794F2EEA94E8') 
+ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = 'DC:54:75:C2:D8:2D')
+ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = 'F4:12:FA:5D:AD:ED')
+# oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
+hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = 'DC:54:75:C2:D9:5D') 
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
 keyboard_thread.daemon = True
@@ -126,8 +126,8 @@ async def cmd_handler():
         elif get_key_state('g'):
             irbeacontuning = 2
             
-        if get_key_state("Key.space"):     
-            if get_key_state("Key.ctrl"):
+        if get_key_state("Key.space"):
+            if get_key_state("Key.ctrl") or get_key_state("Key.ctrl_l") or get_key_state("Key.ctrl_r"):
                 enabled = drivestate
                 waitForEnableReleased = 1
             else:
@@ -155,7 +155,7 @@ async def cmd_handler():
         await asyncio.sleep(0.05)
 
 async def main():
-    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
-    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
 
 asyncio.run(main())

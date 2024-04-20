@@ -18,14 +18,16 @@ class BLE_UART:
     async def read(self):
         try:
             msg = await self._rx_queue.get()
-            return msg.decode()
+            return None if msg is None else msg.decode()
         except Exception as e:
-            await self.disconnect()
+            # await self.disconnect()
+            return
 
     async def write(self, msg): # Where msg is a String
         try:
             await self._client.write_gatt_char(self.UART_RX_CHAR_UUID, msg.encode())
         except Exception as e:
+            print(f"write error {e.__str__}")
             await self.disconnect()
 
     async def connect(self):
