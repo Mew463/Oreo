@@ -24,6 +24,7 @@ irbeaconcmd = ""
 enabled = 0
 activeBeacon = 1
 lastBeaconRead = millis()
+calibrate_accel = 0
 
 async def bluetooth_receive_handler(BLE_DEVICE):
     global lastBeaconRead
@@ -149,8 +150,16 @@ async def cmd_handler():
         
         if (get_key_state("Key.shift")):
             boost = 1 
+        
+        if get_key_state("u"):
+            calibrate_accel = 1
+        elif get_key_state("j"):
+            calibrate_accel = 2
+        else:
+            calibrate_accel = 0
 
-        robotcmd = f"{enabled}{drivecmd}{robottuning}{boost}00"
+        robotcmd = f"{enabled}{drivecmd}{robottuning}{boost}{calibrate_accel}0"
+        # print(robotcmd)
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         await asyncio.sleep(0.05)
 
