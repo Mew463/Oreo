@@ -206,6 +206,14 @@ void loop()
           String msg = "drivpwr : " + String(tank_drive_parameters.drive) + " turnpwr : " + String(tank_drive_parameters.turn);
           laptop.send(msg);
         }
+
+        if (laptop_packetBuffer[4] == '1') {
+          laptop.send("Calibrating AccelZ with Robot Upwards (~ -9.8)");
+          calibrateAccel(1);
+        } else if (laptop_packetBuffer[4] == '2') {
+          laptop.send("Calibrating AccelZ with Robot Downwards (~ 9.8)");
+          calibrateAccel(0);
+        }
       }
 
       driveMotors.l_motor_write(-lmotorpwr);
@@ -215,16 +223,6 @@ void loop()
     } else { // Currently disabled
       toggleLeds(RED, GREEN, 500);
       driveMotors.set_both_motors(0); 
-
-      EVERY_N_MILLIS(100) {
-        if (laptop_packetBuffer[4] == '1') {
-          laptop.send("Calibrating AccelZ with Robot Upwards (~ -9.8)");
-          calibrateAccel(1);
-        } else if (laptop_packetBuffer[4] == '2') {
-          laptop.send("Calibrating AccelZ with Robot Downwards (~ 9.8)");
-          calibrateAccel(0);
-        }
-      }
 
       EVERY_N_SECONDS(1) {
         laptop.send("SOC: " + String(get3sSOC()) + " % " + String(getAccelZ()));
