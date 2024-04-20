@@ -7,6 +7,8 @@ void init_adxl375();
 
 void updateAccel();
 
+void calibrateAccel(bool topside);
+
 float getAccelY();
 
 float getAccelZ();

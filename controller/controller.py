@@ -24,6 +24,7 @@ irbeaconcmd = ""
 enabled = 0
 activeBeacon = 1
 lastBeaconRead = millis()
+calibrate_accel = 0
 
 async def bluetooth_receive_handler(BLE_DEVICE):
     global lastBeaconRead
@@ -149,13 +150,21 @@ async def cmd_handler():
         
         if (get_key_state("Key.shift")):
             boost = 1 
+        
+        if get_key_state("u"):
+            calibrate_accel = 1
+        elif get_key_state("j"):
+            calibrate_accel = 2
+        else:
+            calibrate_accel = 0
 
-        robotcmd = f"{enabled}{drivecmd}{robottuning}{boost}00"
+        robotcmd = f"{enabled}{drivecmd}{robottuning}{boost}{calibrate_accel}0"
+        # print(robotcmd)
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         await asyncio.sleep(0.05)
 
 async def main():
-    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
-    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
 
 asyncio.run(main())

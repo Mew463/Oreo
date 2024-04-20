@@ -27,6 +27,27 @@ float getAccelZ() {
     return (event.acceleration.z);
 }
 
+void calibrateAccel(bool topside) {
+    accel.setTrimOffsets(0, 0, 0);
+    delay(1000);
+
+    int16_t x, y, z;
+    x = accel.getX();
+    y = accel.getY();
+    z = accel.getZ();
+
+    // the trim offsets are in 'multiples' of 4, we want to round, so we add 2
+    if (topside) {
+        accel.setTrimOffsets(-(x+2)/4, 
+                            -(y+2)/4, 
+                            -(z+20+2)/4);
+    } else {
+        accel.setTrimOffsets(-(x+2)/4, 
+                            -(y+2)/4, 
+                            -(z-20+2)/4);  // Z should be '20' at 1g (49mg per bit)
+    }
+}
+
 bool isFlipped() {
     static bool isFlipped = 0;
     long accelValueThreshold = 6;
