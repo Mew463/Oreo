@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 int getPerc(int min, int max, int val) {
-    if (val == 0) // Switch not on
+    if (val < 100) // Switch not on
         return -1;
     int perc = 100 * (val - min) / double(max - min);
     if (perc > 100) 

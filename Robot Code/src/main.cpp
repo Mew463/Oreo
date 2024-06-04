@@ -1,26 +1,27 @@
 #include <LEDHandler.h>
-#include <adxl375.h>
 #include <Drive_Motors.h>
 #include <Battery_Monitor.h>
 #include <melty.h> 
 #include <BLE_Uart.h>
 #include <FastLED.h>
+#include <Photo_Transistors.h>
+#include <pin_definitions.h>
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
 bool wasMeltying = false;
 int slowDownSpeed = 200;
-
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors();
+robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
 
 melty oreo = melty();
 struct melty_parameters {
-  int rot = 210;
-  int tra = 270;
+  int rot = 80;
+  int tra = 80;
   float per = 0.5;
-  int invert = 1;
+  int boost = 50;
 } melty_parameters;
 
 struct tank_drive_parameters {
@@ -37,7 +38,6 @@ void setup()
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
   init_led();
   setLeds(ORANGE);
-  init_adxl375();
   driveMotors.arm_motors();
   laptop.init_ble("Oreo");
   setLeds(BLACK); 
@@ -46,20 +46,14 @@ void setup()
 void loop()
 {
   if (laptop.isConnected()) {
-    EVERY_N_MILLIS(25) {
-      updateAccel();
-      oreo.acccel_period =(2 * 3.14 * 20.97 * 1000000) / (sqrt(getAccelY() * 1000 * 20.97));
-      oreo.accelRPM = (oreo.us_per_min)/(oreo.acccel_period);
-    }
     EVERY_N_MILLIS(50) {
-      if (!isFlipped()) {
+      myPTs.checkIsFlipped();
+      if (!myPTs.isFlippedResult) { // Not flipped
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
-        melty_parameters.invert = 1;
       } else {
         oreo.useTopIr = 0;
         driveMotors.flip_motors = 1;
-        melty_parameters.invert = -1;
       }
     }
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
@@ -68,17 +62,32 @@ void loop()
           laptop.send("seen");
         }
       }
+
+      int boostVal = 0;
+      if (laptop_packetBuffer[3] == '1')
+        boostVal = melty_parameters.boost;
+
+      int adjRotValue = melty_parameters.rot + boostVal;
+      int adjTransValue = melty_parameters.tra + boostVal;
+
+      if (myPTs.isFlippedResult) { // Since we need to spin the opposite way for tooth engagement
+        adjRotValue   *= -1;
+        // adjTransValue *= -1; 
+      }
       
       if (oreo.translate()) {
-        driveMotors.l_motor_write(melty_parameters.invert * (melty_parameters.rot - melty_parameters.invert * melty_parameters.tra));
-        driveMotors.r_motor_write(melty_parameters.invert * (melty_parameters.rot + melty_parameters.invert * melty_parameters.tra));
+        driveMotors.l_motor_write(adjRotValue - adjTransValue);
+        driveMotors.r_motor_write(adjRotValue + adjTransValue);
+      } else if (oreo.translateInverse()) {
+        driveMotors.l_motor_write(adjRotValue + adjTransValue);
+        driveMotors.r_motor_write(adjRotValue - adjTransValue);
       } else {
-        driveMotors.set_both_motors(melty_parameters.invert * (melty_parameters.rot));
-      }
+        driveMotors.set_both_motors((adjRotValue));
+      } 
 
       int drivecmd = laptop_packetBuffer[1] - '0';
       if (drivecmd > 0 && drivecmd < 9) { // 1,2,3,4,5,6,7,8
-        if (melty_parameters.invert == 1)
+        if (myPTs.isFlippedResult == false)
           drivecmd = 8 - drivecmd;
         else
           drivecmd = drivecmd - 1;
@@ -92,7 +101,7 @@ void loop()
       }
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
-        String msg = "RPM (IR): " + String(oreo.ledRPM) + " RPM (Accel) : " + String(oreo.accelRPM);
+        String msg = "RPM : " + String(oreo.ledRPM);
         laptop.send(msg);
       }
 
@@ -127,17 +136,17 @@ void loop()
       wasMeltying = 1;
 
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
-      if (wasMeltying) { // Was previously meltybraining, we need to slowdown
-        unsigned long timeout = millis();
-        while (getAccelY() > 2 && millis() - timeout < 2000) {
-          updateAccel();
-          driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
-          toggleLeds(WHITE, RED, 150);
-          if (laptop_packetBuffer[0] != '2')
-            break;
-        }
-        wasMeltying = 0;
-      }
+      // if (wasMeltying) { // Was previously meltybraining, we need to slowdown
+      //   unsigned long timeout = millis();
+      //   while (getAccelY() > 2 && millis() - timeout < 2000) {
+      //     updateAccel();
+      //     driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
+      //     toggleLeds(WHITE, RED, 150);
+      //     if (laptop_packetBuffer[0] != '2')
+      //       break;
+      //   }
+      //   wasMeltying = 0;
+      // }
       
       int lmotorpwr = 0;
       int rmotorpwr = 0;
@@ -206,26 +215,18 @@ void loop()
           String msg = "drivpwr : " + String(tank_drive_parameters.drive) + " turnpwr : " + String(tank_drive_parameters.turn);
           laptop.send(msg);
         }
-
-        if (laptop_packetBuffer[4] == '1') {
-          laptop.send("Calibrating AccelZ with Robot Upwards (~ -9.8)");
-          calibrateAccel(1);
-        } else if (laptop_packetBuffer[4] == '2') {
-          laptop.send("Calibrating AccelZ with Robot Downwards (~ 9.8)");
-          calibrateAccel(0);
-        }
       }
 
       driveMotors.l_motor_write(-lmotorpwr);
       driveMotors.r_motor_write(rmotorpwr);
       toggleLeds(WHITE, BLACK, 500);
     
-    } else { // Currently disabled
+    } else { // Currently DISABLED
       toggleLeds(RED, GREEN, 500);
       driveMotors.set_both_motors(0); 
 
       EVERY_N_SECONDS(1) {
-        laptop.send("SOC: " + String(get3sSOC()) + " % " + String(getAccelZ()));
+        laptop.send("SOC: " + String(get3sSOC()) + " %");
       }
     }
   } else { // Currently DISCONNECTED

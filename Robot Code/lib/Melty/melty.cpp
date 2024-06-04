@@ -40,10 +40,8 @@ bool melty::update() {
 void melty::computeTimings() {
     unsigned long rotation_period;
     ledRPM = (us_per_min)/(period_micros_calc.getMinVal());
-    if (abs(ledRPM - accelRPM) < 50)
-        rotation_period = period_micros_calc.getMinVal();
-    else
-        rotation_period = acccel_period;
+    rotation_period = period_micros_calc.getMinVal();
+
 
         
     unsigned long center_of_beacon = currentPulse + time_seen_beacon/2; // This should ideally be centered on the beacon 
@@ -64,6 +62,9 @@ void melty::computeTimings() {
 
         startDrive[index] = centerOfDrivePulse - deltaDriveTiming + offset + rotation_period*i;
         endDrive[index] = centerOfDrivePulse + deltaDriveTiming + offset + rotation_period*i;
+
+        startDriveInverse[index] = startDrive[index] + rotation_period/2;
+        endDriveInverse[index] = endDrive[index] + rotation_period/2;
     }
 
     timingToggle = !timingToggle; // Toggle it so that next iteration uses different variables 
@@ -76,6 +77,20 @@ bool melty::translate() { // Returns whether or not robot should translate now
     if (percentageOfRotation != 0) {
         for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
             if (currentTime > startDrive[i] && currentTime < endDrive[i])
+                return 1;
+        }
+        return 0;
+    }
+    else
+        return 0;
+}
+
+bool melty::translateInverse() { // Returns whether or not robot should translate now
+    unsigned long currentTime = micros();
+        
+    if (percentageOfRotation != 0) {
+        for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
+            if (currentTime > startDriveInverse[i] && currentTime < endDriveInverse[i])
                 return 1;
         }
         return 0;

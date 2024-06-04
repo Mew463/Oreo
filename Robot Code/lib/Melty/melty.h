@@ -1,9 +1,8 @@
 #include <Arduino.h>
-#include <adxl375.h>
 #include <ringBuffer.h>
 
-#define TOP_IR_PIN      9
-#define BOTTOM_IR_PIN   10
+#define TOP_IR_PIN      41
+#define BOTTOM_IR_PIN   42
 #define IRLedDataSize   40  // Size of our Ring Buffer that will hold the IR Led data 
 
 #define TRANSLATE_TIMINGS_SIZE 6
@@ -15,8 +14,8 @@ class melty {
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
         bool translate();
+        bool translateInverse();
         int ledRPM = 0;
-        int accelRPM = 0;
         unsigned long acccel_period = 1;
         int deg = 0;
         float percentageOfRotation = 0;
@@ -43,6 +42,9 @@ class melty {
 
         long startDrive[TRANSLATE_TIMINGS_SIZE] = {0};
         long endDrive[TRANSLATE_TIMINGS_SIZE] = {0};
+
+        long startDriveInverse[TRANSLATE_TIMINGS_SIZE] = {0};
+        long endDriveInverse[TRANSLATE_TIMINGS_SIZE] = {0};
 
         bool timingToggle = 0;
 

@@ -2,13 +2,13 @@
 #include <Arduino.h>
 
 void Drive_Motors::init_motors() {
-    rmot.install(GPIO_NUM_7, RMT_CHANNEL_1); 
+    rmot.install(GPIO_NUM_1, RMT_CHANNEL_1); 
     rmot.init();
     rmot.setReversed(false);
     rmot.set3DMode(true);
     rmot.throttleArm(); // <--- Super important!!!;
 
-    lmot.install(GPIO_NUM_8, RMT_CHANNEL_2); 
+    lmot.install(GPIO_NUM_45, RMT_CHANNEL_2); 
     lmot.init();
     lmot.setReversed(false);
     lmot.set3DMode(true);

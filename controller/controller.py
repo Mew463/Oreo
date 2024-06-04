@@ -12,7 +12,7 @@ def millis():
 
 ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '642D48B0-0DA1-AB00-2DDD-B639F5353E80')
 ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
-oreo = BLE_UART(peripheral_name='Oreo', address = '599CA2EF-37D8-78BE-C3A8-C8DC5CEE9838')
+oreo = BLE_UART(peripheral_name='Oreo', address = '168B3E4A-21A9-918B-F28C-8D26D656012C')
 hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = 'DB644862-A8E2-33B5-1D6E-794F2EEA94E8') 
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
@@ -58,7 +58,7 @@ async def ir_beacon_switcher():
         await asyncio.sleep(0.1)
         if (enabled != 1):
             lastBeaconRead = millis() + 2000 # Add some time so the beacon doesnt switch right after enabling melty brain mode
-        if (enabled == 1 and millis() - lastBeaconRead > 1000 and ir_beacon_2.isConnected == True and ir_beacon_1.isConnected):
+        if (enabled == 1 and millis() - lastBeaconRead > 1000 and ir_beacon_2.isConnected and ir_beacon_1.isConnected):
             toggleBeacon()
             
 def toggleBeacon():
@@ -159,7 +159,6 @@ async def cmd_handler():
             calibrate_accel = 0
 
         robotcmd = f"{enabled}{drivecmd}{robottuning}{boost}{calibrate_accel}0"
-        # print(robotcmd)
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         await asyncio.sleep(0.05)
 

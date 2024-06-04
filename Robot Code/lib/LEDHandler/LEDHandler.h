@@ -4,7 +4,7 @@
 #ifdef IR_BEACON
     #define LEDPIN 5
 #else
-    #define LEDPIN 4
+    #define LEDPIN 46
 #endif
 
 enum Colors {
