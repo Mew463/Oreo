@@ -59,11 +59,11 @@ void loop()
       if (!myPTs.isFlippedResult) { // Not flipped
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
-        // ledmode = TOP;
+        setLedMode(TOP);
       } else {
         oreo.useTopIr = 0;
         driveMotors.flip_motors = 1;
-        // ledmode = BOTTOM;
+        setLedMode(BOTTOM);
       }
 
       if (motor_settings.newSettings == true) {
@@ -261,12 +261,11 @@ void loop()
       driveMotors.set_both_motors(0); 
 
       EVERY_N_SECONDS(1) {
-        // laptop.send("SOC: " + String(get3sSOC()) + " %");
-        // laptop.send(motor_settings.tankdrive_param_string);
+        laptop.send("SOC: " + String(get3sSOC()) + " %");
       }
     }
   } else { // Currently DISCONNECTED
-    // ledmode = BOTH;
+    setLedMode(BOTH);
     driveMotors.set_both_motors(0);
     toggleLeds(RED, BLACK, 500);
   }

@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <ringBuffer.h>
+#define RING_BUF_PHOTOTRANS_SIZE 10
 
 class robotOrientation{
   
@@ -11,7 +13,13 @@ class robotOrientation{
   int topPin;
   int bottomPin;
 
-  const int delayTimeMS = 500;
+  const int delayTimeMS = 100;
+
+  long topPhotoTransVals[RING_BUF_PHOTOTRANS_SIZE] = {0};
+  ringBuffer topPhotoRingBuf = ringBuffer(topPhotoTransVals, RING_BUF_PHOTOTRANS_SIZE, 0);
+
+  long bottomPhotoTransVals[RING_BUF_PHOTOTRANS_SIZE] = {0};
+  ringBuffer bottomPhotoRingBuf = ringBuffer(bottomPhotoTransVals, RING_BUF_PHOTOTRANS_SIZE, 0);
 
   public:
   bool isFlippedResult = 0;
@@ -20,7 +28,10 @@ class robotOrientation{
 
 
   bool checkIsFlipped() {
-    curIsFlipped = analogRead(bottomPin) - analogRead(topPin) > 0 ? 1 : 0;
+    topPhotoRingBuf.update(analogRead(topPin));
+    bottomPhotoRingBuf.update(analogRead(bottomPin));
+
+    curIsFlipped = bottomPhotoRingBuf.getMaxVal() - topPhotoRingBuf.getMaxVal() > 0 ? 1 : 0;
     
     if (curIsFlipped == 1 && lastIsFlipped == 0)
       lastTransition = millis();

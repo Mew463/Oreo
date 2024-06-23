@@ -24,10 +24,10 @@ enum Colors {
 };
 
 enum ledmodes{
-	BOTH, TOP, BOTTOM
+	BOTH, BOTTOM, TOP 
 };
 
-int ledmode123 = BOTH;
+void setLedMode(ledmodes newledmode);
 
 void init_led();
 
