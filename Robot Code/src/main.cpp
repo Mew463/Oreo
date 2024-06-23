@@ -6,6 +6,8 @@
 #include <FastLED.h>
 #include <Photo_Transistors.h>
 #include <pin_definitions.h>
+#include "SPIFFS.h"
+#include <databasehandler.h>
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -13,21 +15,22 @@ const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
 bool wasMeltying = false;
 int slowDownSpeed = 200;
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
-Drive_Motors driveMotors = Drive_Motors();
-robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
+Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGHT_MOTOR_PIN, RIGHT_MOTOR_CHANNEL);
+robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);\
+database_handler motor_settings = database_handler();
 
-melty oreo = melty();
+melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN);
 struct melty_parameters {
-  int rot = 80;
-  int tra = 80;
-  float per = 0.5;
-  int boost = 50;
+  int rot;
+  int tra;
+  float per;
+  int boost;
 } melty_parameters;
 
 struct tank_drive_parameters {
-  int drive = 10;
-  int turn = 20;
-  int boost = 40;
+  int drive;
+  int turn;
+  int boost;
 } tank_drive_parameters;
 
 int tuningValue = 10;
@@ -35,12 +38,17 @@ int tuningValue = 10;
 void setup()
 {
   USBSerial.begin(115200);
+  SPIFFS.begin(true);
+
+  motor_settings.updateFromDatabase();
+
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
   init_led();
   setLeds(ORANGE);
   driveMotors.arm_motors();
   laptop.init_ble("Oreo");
   setLeds(BLACK); 
+
 }
  
 void loop()
@@ -51,11 +59,35 @@ void loop()
       if (!myPTs.isFlippedResult) { // Not flipped
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
+        // ledmode = TOP;
       } else {
         oreo.useTopIr = 0;
         driveMotors.flip_motors = 1;
+        // ledmode = BOTTOM;
+      }
+
+      if (motor_settings.newSettings == true) {
+        JsonDocument melty_params_json;
+        deserializeJson(melty_params_json, motor_settings.melty_param_string);
+
+        melty_parameters.rot = melty_params_json["rot"].as<signed int>();
+        melty_parameters.tra = melty_params_json["tra"].as<signed int>();
+        melty_parameters.per = melty_params_json["per"].as<float>();
+        melty_parameters.boost = melty_params_json["boost"].as<signed int>();
+
+        JsonDocument tank_params_json;
+        deserializeJson(tank_params_json, motor_settings.tankdrive_param_string);
+
+        tank_drive_parameters.drive = tank_params_json["drive"].as<signed int>();
+        tank_drive_parameters.turn = tank_params_json["turn"].as<signed int>();
+        tank_drive_parameters.boost = tank_params_json["boost"].as<signed int>();
+
+        motor_settings.newSettings = false;
+
       }
     }
+
+
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
       if (oreo.update()) { // If seen the LED
         EVERY_N_MILLIS(250) {
@@ -71,8 +103,7 @@ void loop()
       int adjTransValue = melty_parameters.tra + boostVal;
 
       if (myPTs.isFlippedResult) { // Since we need to spin the opposite way for tooth engagement
-        adjRotValue   *= -1;
-        // adjTransValue *= -1; 
+        // adjRotValue   *= -1;
       }
       
       if (oreo.translate()) {
@@ -80,7 +111,7 @@ void loop()
         driveMotors.r_motor_write(adjRotValue + adjTransValue);
       } else if (oreo.translateInverse()) {
         driveMotors.l_motor_write(adjRotValue + adjTransValue);
-        driveMotors.r_motor_write(adjRotValue - adjTransValue);
+         driveMotors.r_motor_write(adjRotValue - adjTransValue);
       } else {
         driveMotors.set_both_motors((adjRotValue));
       } 
@@ -130,6 +161,8 @@ void loop()
         if (laptop_packetBuffer[2] != '0') {
           String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
           laptop.send(msg);
+
+          motor_settings.storeMeltyParameters(melty_parameters.rot, melty_parameters.tra, melty_parameters.per, melty_parameters.boost);
         }
       }
 
@@ -214,6 +247,8 @@ void loop()
         if (laptop_packetBuffer[2] != '0') {
           String msg = "drivpwr : " + String(tank_drive_parameters.drive) + " turnpwr : " + String(tank_drive_parameters.turn);
           laptop.send(msg);
+
+          motor_settings.storeTankParameters(tank_drive_parameters.drive, tank_drive_parameters.turn, tank_drive_parameters.boost);
         }
       }
 
@@ -226,10 +261,12 @@ void loop()
       driveMotors.set_both_motors(0); 
 
       EVERY_N_SECONDS(1) {
-        laptop.send("SOC: " + String(get3sSOC()) + " %");
+        // laptop.send("SOC: " + String(get3sSOC()) + " %");
+        // laptop.send(motor_settings.tankdrive_param_string);
       }
     }
   } else { // Currently DISCONNECTED
+    // ledmode = BOTH;
     driveMotors.set_both_motors(0);
     toggleLeds(RED, BLACK, 500);
   }

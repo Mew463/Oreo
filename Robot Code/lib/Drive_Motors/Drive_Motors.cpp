@@ -1,14 +1,16 @@
 #include "Drive_Motors.h"
 #include <Arduino.h>
 
+Drive_Motors::Drive_Motors(gpio_num_t l_motor_pin, rmt_channel_t l_motor_channel, gpio_num_t r_motor_pin, rmt_channel_t r_motor_channel) : l_motor_pin(l_motor_pin), l_motor_channel(l_motor_channel), r_motor_pin(r_motor_pin), r_motor_channel(r_motor_channel) {}
+
 void Drive_Motors::init_motors() {
-    rmot.install(GPIO_NUM_1, RMT_CHANNEL_1); 
+    rmot.install(r_motor_pin, r_motor_channel); 
     rmot.init();
     rmot.setReversed(false);
     rmot.set3DMode(true);
     rmot.throttleArm(); // <--- Super important!!!;
 
-    lmot.install(GPIO_NUM_45, RMT_CHANNEL_2); 
+    lmot.install(l_motor_pin, l_motor_channel); 
     lmot.init();
     lmot.setReversed(false);
     lmot.set3DMode(true);

@@ -1,7 +1,7 @@
 #include <melty.h>
 #include <LEDHandler.h>
 
-melty::melty() {
+melty::melty(int top_ir_pin, int bottom_ir_pin) : top_ir_pin(top_ir_pin), bottom_ir_pin(bottom_ir_pin) {
     period_micros_calc = ringBuffer(period_micros_calc_array, 5, 1);
     time_seen_beacon_calc = ringBuffer(time_seen_beacon_calc_array, TIME_SEEN_BEACON_ARRAY_SIZE, 0.7); 
 }
@@ -9,9 +9,9 @@ melty::melty() {
 bool melty::update() {
     bool curSeenIRLed;
     if (useTopIr)
-        curSeenIRLed = isBeaconSensed(!digitalRead(TOP_IR_PIN));
+        curSeenIRLed = isBeaconSensed(!digitalRead(top_ir_pin));
     else
-        curSeenIRLed = isBeaconSensed(!digitalRead(BOTTOM_IR_PIN));
+        curSeenIRLed = isBeaconSensed(!digitalRead(bottom_ir_pin));
 
     if (curSeenIRLed != lastSeenIRLed)
         if (curSeenIRLed) { // Activates on the rising edge of seeing the IR LED

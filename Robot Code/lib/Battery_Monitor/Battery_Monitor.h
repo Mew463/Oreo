@@ -12,8 +12,8 @@ int getPerc(int min, int max, int val) {
 
 }
 int get3sSOC() {
-    int max = 4096-20;
-    int min = 3300;
+    int max = 4096-50;
+    int min = 3000;
     return getPerc(min, max ,analogRead(18));
 }
 

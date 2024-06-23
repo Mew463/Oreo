@@ -1,15 +1,13 @@
 #include <Arduino.h>
 #include <ringBuffer.h>
 
-#define TOP_IR_PIN      41
-#define BOTTOM_IR_PIN   42
 #define IRLedDataSize   40  // Size of our Ring Buffer that will hold the IR Led data 
 
 #define TRANSLATE_TIMINGS_SIZE 6
 #define TIME_SEEN_BEACON_ARRAY_SIZE 5
 class melty {
     public:
-        melty();
+        melty (int top_ir_pin, int bottom_ir_pin);
         bool update();
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
@@ -30,6 +28,10 @@ class melty {
         const int us_per_min = 60000000;
 
     private:
+
+        int top_ir_pin = 0;
+        int bottom_ir_pin = 0;
+
         bool lastSeenIRLed = 0;
         long period_micros = micros();
         long time_seen_beacon = micros();

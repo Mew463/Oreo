@@ -23,6 +23,12 @@ enum Colors {
 	WHITE
 };
 
+enum ledmodes{
+	BOTH, TOP, BOTTOM
+};
+
+int ledmode123 = BOTH;
+
 void init_led();
 
 void setLeds(Colors color);
