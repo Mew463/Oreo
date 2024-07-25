@@ -9,6 +9,8 @@
 #include "SPIFFS.h"
 #include <databasehandler.h>
 
+#define IS_HOCKEY_PUCK 1
+
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
@@ -16,7 +18,7 @@ bool wasMeltying = false;
 int slowDownSpeed = 200;
 BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGHT_MOTOR_PIN, RIGHT_MOTOR_CHANNEL);
-robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);\
+robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
 database_handler motor_settings = database_handler();
 
 melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN);
@@ -102,8 +104,9 @@ void loop()
       int adjRotValue = melty_parameters.rot + boostVal;
       int adjTransValue = melty_parameters.tra + boostVal;
 
-      if (myPTs.isFlippedResult) { // Since we need to spin the opposite way for tooth engagement
-        // adjRotValue   *= -1;
+      if (myPTs.isFlippedResult && IS_HOCKEY_PUCK) { // Since we need to spin the opposite way for tooth engagement if we are hockey puck
+        adjRotValue   *= -1;
+        adjTransValue *= -1;
       }
       
       if (oreo.translate()) {
@@ -118,10 +121,16 @@ void loop()
 
       int drivecmd = laptop_packetBuffer[1] - '0';
       if (drivecmd > 0 && drivecmd < 9) { // 1,2,3,4,5,6,7,8
-        if (myPTs.isFlippedResult == false)
-          drivecmd = 8 - drivecmd;
+        drivecmd -= 1; // Make it 0 indexed, so now it goes 0 -> 7
+        if (myPTs.isFlippedResult == true && IS_HOCKEY_PUCK) // Perform manipulation on the orientation offsets 1
+          drivecmd = drivecmd + 3;
         else
-          drivecmd = drivecmd - 1;
+          drivecmd = 7 - drivecmd;
+
+        if (drivecmd < 0 || drivecmd > 7) {
+          drivecmd = (drivecmd % 8 + 8) % 8; // Make sure we always in the bounds of the array
+        }
+        
         oreo.deg = headings[drivecmd];
       }
 
