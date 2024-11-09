@@ -2,9 +2,9 @@
 #include <FastLED.h>
 
 #ifdef IR_BEACON
-    #define LEDPIN 5
+    #define LEDPIN 4
 #else
-    #define LEDPIN 46
+    #define LEDPIN 45
 #endif
 
 enum Colors {

@@ -4,16 +4,18 @@ from LaptopKeyboard import *
 from bluetooth import *
 import asyncio
 import time
+import streamlit as st
 
 startTime = time.time()
 
 def millis():
     return round((time.time()-startTime) * 1000)
 
-ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '642D48B0-0DA1-AB00-2DDD-B639F5353E80')
-ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = '37E54CED-FA64-96E8-C84C-8528ADB5AC13')
-oreo = BLE_UART(peripheral_name='Oreo', address = '168B3E4A-21A9-918B-F28C-8D26D656012C')
-hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = '07C80925-7C0F-1236-FB54-CFC3912A3B9D') 
+ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '9AC0FFF3-446C-1A64-DA89-1376064B2BA1')
+ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = 'DBA047A7-4143-45D5-E469-FEEA2E354502')
+oreo = BLE_UART(peripheral_name='Oreo', address = '1932D032-A476-F238-07F0-A39D5208BC73')
+bt_devices = {ir_beacon_2, ir_beacon_1, oreo}
+# hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = '07C80925-7C0F-1236-FB54-CFC3912A3B9D') 
 
 keyboard_thread = threading.Thread(target=lambda: Listener(on_press=on_press, on_release=on_release).start())
 keyboard_thread.daemon = True
@@ -162,8 +164,37 @@ async def cmd_handler():
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         await asyncio.sleep(0.05)
         
-async def main():
-    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
-    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+async def main_async_tasks():
+    await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
+    # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
 
-asyncio.run(main())
+def start_async_tasks():
+    asyncio.run(main_async_tasks())
+
+
+if "Running" not in st.session_state:
+    st.session_state["Running"] = True
+    async_thread = threading.Thread(target=start_async_tasks)
+    async_thread.start()
+
+# Display UI in Streamlit, updating based on session state
+st.title("Oreo Control Panel")
+st.header("Device Status")
+
+# Use an empty container to update just the status UI
+status_container = st.empty()
+
+# Update only the device status UI
+# while True:
+with status_container.container():
+    status_cols = st.columns(len(bt_devices))
+    for i, bt_device in enumerate(bt_devices):
+        with status_cols[i]:
+            st.subheader(bt_device._peripheral_name)
+            status = bt_device.isConnected
+            if status:
+                st.success("Connected")
+            else:
+                st.error("Disconnected")
+time.sleep(2)  # Update interval in seconds
+st.rerun()

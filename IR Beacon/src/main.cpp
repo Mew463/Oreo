@@ -4,12 +4,14 @@
 #include <BLE_Uart.h>
 #include <FastLED.h>
 
-#define TARGETCMD '1' // Change based on which IR_Beacon working on 
+#define TARGETCMD '2' // Change based on which IR_Beacon working on 
+
+#define IRLEDPIN 3
+#define BAT_PIN 1 
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 
-const int IRLedPin = 4;
 const int freq = 38000;
 const int ledChannel = 1;
 const int resolution = 8;
@@ -22,9 +24,9 @@ BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
 void setup(){
   init_led();
   setLeds(ORANGE); 
-  USBSerial.begin(115200);
+  Serial.begin(115200);
   ledcSetup(ledChannel, freq, resolution);
-  ledcAttachPin(IRLedPin, ledChannel);
+  ledcAttachPin(IRLEDPIN, ledChannel);
   laptop.init_ble("IR Beacon");
   setLeds(BLACK);
 }
@@ -36,7 +38,7 @@ void loop(){
         toggleLeds(RED, GREEN, 500);
         ledcWrite(ledChannel, 0);
         EVERY_N_SECONDS(10) {
-          laptop.send("SOC: " + String(get1sSOC()) + " %");
+          laptop.send("SOC: " + String(get1sSOC(BAT_PIN)) + " %");
         }
         break;
       case '1': // Enable one of the IR Beacons

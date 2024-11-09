@@ -9,7 +9,7 @@
 #include "SPIFFS.h"
 #include <databasehandler.h>
 
-#define IS_HOCKEY_PUCK 1
+#define IS_HOCKEY_PUCK 0
 
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
@@ -21,7 +21,7 @@ Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGH
 robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
 database_handler motor_settings = database_handler();
 
-melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN);
+melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN, RED_LED_TOP, RED_LED_BOT);
 struct melty_parameters {
   int rot;
   int tra;
@@ -46,6 +46,11 @@ void setup()
 
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
   init_led();
+  pinMode(RED_LED_BOT, OUTPUT);
+  pinMode(RED_LED_TOP, OUTPUT);
+  digitalWrite(RED_LED_BOT, HIGH);
+  digitalWrite(RED_LED_TOP, HIGH);
+
   setLeds(ORANGE);
   driveMotors.arm_motors();
   laptop.init_ble("Oreo");
@@ -89,8 +94,10 @@ void loop()
       }
     }
 
-
+ 
     if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
+      setLedMode(BOTH);
+      setLeds(BLACK);
       if (oreo.update()) { // If seen the LED
         EVERY_N_MILLIS(250) {
           laptop.send("seen");
@@ -270,7 +277,7 @@ void loop()
       driveMotors.set_both_motors(0); 
 
       EVERY_N_SECONDS(1) {
-        laptop.send("SOC: " + String(get3sSOC()) + " %");
+        laptop.send("SOC: " + String(get3sSOC(BAT_PIN)) + " %");
       }
     }
   } else { // Currently DISCONNECTED
@@ -280,3 +287,5 @@ void loop()
   }
 
 }
+
+// this is katie hello :)) 

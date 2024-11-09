@@ -31,7 +31,7 @@ void setup() {
   ledcWrite(motchannel, neutralVal);
 
 
-  autoMotorTune();
+  // autoMotorTune();
 
   while (myComputer.getInt(0) == 0) {
     delay(10);

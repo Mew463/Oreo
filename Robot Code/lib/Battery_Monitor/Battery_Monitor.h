@@ -11,14 +11,14 @@ int getPerc(int min, int max, int val) {
     return perc;
 
 }
-int get3sSOC() {
+int get3sSOC(int pin) {
     int max = 4096-50;
     int min = 3000;
-    return getPerc(min, max ,analogRead(18));
+    return getPerc(min, max ,analogRead(pin));
 }
 
-int get1sSOC() {
-    int max = 2585-50;
+int get1sSOC(int pin) {
+    int max = 2900-50;
     int min = 2048;
-    return getPerc(min, max ,analogRead(18));
+    return getPerc(min, max ,analogRead(pin));
 }
