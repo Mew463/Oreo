@@ -7,7 +7,7 @@
 #define TIME_SEEN_BEACON_ARRAY_SIZE 5
 class melty {
     public:
-        melty (int top_ir_pin, int bottom_ir_pin, int top_led_pin, int bottom_led_pin);
+        melty(int top_ir_pin, int bottom_ir_pin);
         bool update();
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
@@ -31,9 +31,7 @@ class melty {
 
         int top_ir_pin = 0;
         int bottom_ir_pin = 0;
-        int top_led_pin = 0;
-        int bottom_led_pin = 0;
-
+        
         bool lastSeenIRLed = 0;
         long period_micros = micros();
         long time_seen_beacon = micros();

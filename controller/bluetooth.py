@@ -9,11 +9,15 @@ class BLE_UART:
     UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
     UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
     isConnected = False
+    batteryPerc = 0
     
     def __init__(self, peripheral_name="", address = ""):
         self._peripheral_name = peripheral_name
         self._address = address
         self._rx_queue = asyncio.Queue()
+        
+    async def setSOC(self, percentage):
+        self.batteryPerc = percentage
         
     async def read(self):
         try:

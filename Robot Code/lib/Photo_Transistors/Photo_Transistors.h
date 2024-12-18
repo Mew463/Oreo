@@ -26,6 +26,9 @@ class robotOrientation{
 
   robotOrientation(int topPin, int bottomPin) : topPin(topPin), bottomPin(bottomPin) {}
 
+  void printDebugInfo() {
+    USBSerial.printf("Top : %d  Bottom: %d \n", analogRead(topPin), analogRead(bottomPin) );
+  }
 
   bool checkIsFlipped() {
     topPhotoRingBuf.update(analogRead(topPin));

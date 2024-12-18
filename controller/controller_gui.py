@@ -4,6 +4,7 @@ from LaptopKeyboard import *
 from bluetooth import *
 import asyncio
 import time
+import streamlit as st
 
 startTime = time.time()
 
@@ -38,6 +39,8 @@ async def bluetooth_receive_handler(BLE_DEVICE):
                     lastBeaconRead = millis()
             elif (msg is not None):
                 print(f"[{BLE_DEVICE._peripheral_name}] {msg}")
+                if msg.find("SOC") != -1:
+                    await BLE_DEVICE.setSOC(int(msg[5:8]))
 
 async def bluetooth_comm_handler(BLE_DEVICE, isMainRobot):
     await BLE_DEVICE.connect()
@@ -163,9 +166,30 @@ async def cmd_handler():
         irbeaconcmd = f"{enabled}{activeBeacon}{irbeacontuning}000"
         await asyncio.sleep(0.05)
         
-async def main():
+async def main_async_tasks():
     await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
     # await asyncio.gather(ir_beacon_switcher(), cmd_handler(), bluetooth_comm_handler(ir_beacon_1, False), bluetooth_comm_handler(oreo, True), bluetooth_comm_handler(hockey_puck, True), bluetooth_receive_handler(hockey_puck), bluetooth_receive_handler(ir_beacon_1), bluetooth_receive_handler(oreo), bluetooth_comm_handler(ir_beacon_2, False), bluetooth_receive_handler(ir_beacon_2))
-    
-asyncio.run(main())
 
+def start_async_tasks():
+    asyncio.run(main_async_tasks())
+
+
+async_thread = threading.Thread(target=start_async_tasks)
+async_thread.start()
+
+# Use an empty container to update just the status UI
+status_container = st.empty()
+
+while True:
+    with status_container.container():  # Using st.container() instead of st.empty()
+        status_cols = st.columns(len(bt_devices))
+        for i, bt_device in enumerate(bt_devices):
+            with status_cols[i]:
+                st.subheader(bt_device._peripheral_name)
+                if (bt_device.isConnected):
+                    st.progress(bt_device.batteryPerc / 100)  # Normalize battery level (0 to 1 for progress bar)
+                    st.caption(f"Battery: {bt_device.batteryPerc}%")
+                else:
+                    st.error("Disconnected")
+                    
+    time.sleep(0.1)  # Update interval in seconds

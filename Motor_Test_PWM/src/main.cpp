@@ -1,37 +1,37 @@
 #include <Arduino.h>
-#include "/Users/mingweiyeoh/Documents/GitHub/Arduino-Projects/libraries/Custom/USBSerialHandler.h"
+#include "/Users/mingweiyeoh/Documents/GitHub/Arduino-Projects/libraries/Custom/SerialHandler.h"
 
 SerialHandler myComputer = SerialHandler(); 
 
-const int motpin = 7; // 7 is right and 8 is left
+const int motpin = 1; 
 const int motchannel = 0;
 const int neutralVal = 189;
 
 void autoMotorTune() {
   delay(1000);
-  USBSerial.println("Start with motor off!!");
+  Serial.println("Start with motor off!!");
   ledcWrite(motchannel, 220);
   delay(3000);
-  USBSerial.println("Turn motor on!!!");
+  Serial.println("Turn motor on!!!");
   delay(5000);
   ledcWrite(motchannel, 40);
-  USBSerial.println("Tuning low value!!!");
+  Serial.println("Tuning low value!!!");
   delay(2500);
   ledcWrite(motchannel, neutralVal);
-  USBSerial.println("Tuning neutral value!!!");
+  Serial.println("Tuning neutral value!!!");
   delay(2500);
-  USBSerial.println("Done!!!");
+  Serial.println("Done!!!");
 }
 
 
 void setup() {
-  USBSerial.begin(115200);  
+  Serial.begin(115200);  
   ledcSetup(motchannel, 500, 8);
   ledcAttachPin(motpin, motchannel);
   ledcWrite(motchannel, neutralVal);
 
 
-  // autoMotorTune();
+  autoMotorTune();
 
   while (myComputer.getInt(0) == 0) {
     delay(10);

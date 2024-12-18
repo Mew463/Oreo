@@ -21,7 +21,7 @@ Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGH
 robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
 database_handler motor_settings = database_handler();
 
-melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN, RED_LED_TOP, RED_LED_BOT);
+melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN);
 struct melty_parameters {
   int rot;
   int tra;
@@ -39,19 +39,23 @@ int tuningValue = 10;
 
 void setup()
 {
+  init_led();
+  setLeds(ORANGE);
+  
+  delay(250); // Power up delay for the Serial
   USBSerial.begin(115200);
   SPIFFS.begin(true);
 
   motor_settings.updateFromDatabase();
 
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
-  init_led();
+  
   pinMode(RED_LED_BOT, OUTPUT);
   pinMode(RED_LED_TOP, OUTPUT);
   digitalWrite(RED_LED_BOT, HIGH);
   digitalWrite(RED_LED_TOP, HIGH);
 
-  setLeds(ORANGE);
+  
   driveMotors.arm_motors();
   laptop.init_ble("Oreo");
   setLeds(BLACK); 
@@ -60,6 +64,11 @@ void setup()
  
 void loop()
 {
+  if (!laptop.isConnected() || laptop_packetBuffer[0] == '1') { // Turn off high powered leds if not meltying
+    digitalWrite(RED_LED_TOP, HIGH); 
+    digitalWrite(RED_LED_BOT, HIGH);
+  }
+
   if (laptop.isConnected()) {
     EVERY_N_MILLIS(50) {
       myPTs.checkIsFlipped();
@@ -99,9 +108,17 @@ void loop()
       setLedMode(BOTH);
       setLeds(BLACK);
       if (oreo.update()) { // If seen the LED
+        if (oreo.useTopIr)
+          digitalWrite(RED_LED_TOP, LOW);
+        else  
+          digitalWrite(RED_LED_BOT, LOW);
         EVERY_N_MILLIS(250) {
           laptop.send("seen");
         }
+
+      } else {
+        digitalWrite(RED_LED_TOP, HIGH); 
+        digitalWrite(RED_LED_BOT, HIGH);
       }
 
       int boostVal = 0;
@@ -110,11 +127,6 @@ void loop()
 
       int adjRotValue = melty_parameters.rot + boostVal;
       int adjTransValue = melty_parameters.tra + boostVal;
-
-      if (myPTs.isFlippedResult && IS_HOCKEY_PUCK) { // Since we need to spin the opposite way for tooth engagement if we are hockey puck
-        adjRotValue   *= -1;
-        adjTransValue *= -1;
-      }
       
       if (oreo.translate()) {
         driveMotors.l_motor_write(adjRotValue - adjTransValue);
@@ -129,10 +141,7 @@ void loop()
       int drivecmd = laptop_packetBuffer[1] - '0';
       if (drivecmd > 0 && drivecmd < 9) { // 1,2,3,4,5,6,7,8
         drivecmd -= 1; // Make it 0 indexed, so now it goes 0 -> 7
-        if (myPTs.isFlippedResult == true && IS_HOCKEY_PUCK) // Perform manipulation on the orientation offsets 1
-          drivecmd = drivecmd + 3;
-        else
-          drivecmd = 7 - drivecmd;
+        drivecmd = 7 - drivecmd;
 
         if (drivecmd < 0 || drivecmd > 7) {
           drivecmd = (drivecmd % 8 + 8) % 8; // Make sure we always in the bounds of the array
@@ -185,17 +194,6 @@ void loop()
       wasMeltying = 1;
 
     } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
-      // if (wasMeltying) { // Was previously meltybraining, we need to slowdown
-      //   unsigned long timeout = millis();
-      //   while (getAccelY() > 2 && millis() - timeout < 2000) {
-      //     updateAccel();
-      //     driveMotors.set_both_motors(-slowDownSpeed * melty_parameters.invert);
-      //     toggleLeds(WHITE, RED, 150);
-      //     if (laptop_packetBuffer[0] != '2')
-      //       break;
-      //   }
-      //   wasMeltying = 0;
-      // }
       
       int lmotorpwr = 0;
       int rmotorpwr = 0;
