@@ -11,8 +11,8 @@ class melty {
         bool update();
         bool isBeaconSensed(bool currentReading);
         void computeTimings();
-        bool translate();
-        bool translateInverse();
+        int translate();
+        // bool translateInverse();
         int ledRPM = 0;
         unsigned long acccel_period = 1;
         int deg = 0;

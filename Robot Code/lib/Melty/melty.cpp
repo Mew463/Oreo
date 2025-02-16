@@ -70,33 +70,49 @@ void melty::computeTimings() {
 
 }
 
-bool melty::translate() { // Returns whether or not robot should translate now
+int melty::translate() { // Returns percentage that robot should translate
     unsigned long currentTime = micros();
         
     if (percentageOfRotation != 0) {
         for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
-            if (currentTime > startDrive[i] && currentTime < endDrive[i])
-                return 1;
+            if (currentTime > startDrive[i] && currentTime < endDrive[i]) {
+                int delta = endDrive[i] - startDrive[i];
+                int timeSinceStart = currentTime - startDrive[i];
+                int maxPowerAt = delta/2;
+                int distanceFromMax = abs(timeSinceStart - maxPowerAt);
+
+                return 100 - (100 * distanceFromMax/maxPowerAt);
+            }
         }
-        return 0;
+
+        for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
+            if (currentTime > startDriveInverse[i] && currentTime < endDriveInverse[i]) {
+                int delta = endDriveInverse[i] - startDriveInverse[i];
+                int timeSinceStart = currentTime - startDriveInverse[i];
+                int maxPowerAt = delta/2;
+                int distanceFromMax = abs(timeSinceStart - maxPowerAt);
+
+                return -(100 - (100 * distanceFromMax/maxPowerAt));
+            }
+        }
+
     }
-    else
-        return 0;
+    return 0;
 }
 
-bool melty::translateInverse() { // Returns whether or not robot should translate now
-    unsigned long currentTime = micros();
+// bool melty::translateInverse() { // Returns whether or not robot should translate now
+//     unsigned long currentTime = micros();
         
-    if (percentageOfRotation != 0) {
-        for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
-            if (currentTime > startDriveInverse[i] && currentTime < endDriveInverse[i])
-                return 1;
-        }
-        return 0;
-    }
-    else
-        return 0;
-}
+//     if (percentageOfRotation != 0) {
+//         for (int i = 0; i < TRANSLATE_TIMINGS_SIZE; i++) {
+//             if (currentTime > startDriveInverse[i] && currentTime < endDriveInverse[i])
+//                 return 1;
+//         }
+//         return 0;
+//     }
+//     else
+//         return 0;
+// }
 
 bool melty::isBeaconSensed(bool currentReading) {
     // for (int i = 0; i < IRLedDataSize; i++)

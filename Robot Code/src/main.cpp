@@ -42,24 +42,23 @@ void setup()
   init_led();
   setLeds(ORANGE);
   
-  delay(250); // Power up delay for the Serial
-  USBSerial.begin(115200);
   SPIFFS.begin(true);
-
+  
   motor_settings.updateFromDatabase();
-
+  
   driveMotors.init_motors(); // <- This needs to be init first or else something with RMT doesnt work....
   
   pinMode(RED_LED_BOT, OUTPUT);
   pinMode(RED_LED_TOP, OUTPUT);
   digitalWrite(RED_LED_BOT, HIGH);
   digitalWrite(RED_LED_TOP, HIGH);
-
   
   driveMotors.arm_motors();
   laptop.init_ble("Oreo");
   setLeds(BLACK); 
-
+  
+  delay(250); // Power up delay for the Serial
+  USBSerial.begin(115200);
 }
  
 void loop()
@@ -127,13 +126,11 @@ void loop()
 
       int adjRotValue = melty_parameters.rot + boostVal;
       int adjTransValue = melty_parameters.tra + boostVal;
-      
-      if (oreo.translate()) {
-        driveMotors.l_motor_write(adjRotValue - adjTransValue);
-        driveMotors.r_motor_write(adjRotValue + adjTransValue);
-      } else if (oreo.translateInverse()) {
-        driveMotors.l_motor_write(adjRotValue + adjTransValue);
-         driveMotors.r_motor_write(adjRotValue - adjTransValue);
+      float transMultiplier = oreo.translate() / 100.0;
+
+      if (transMultiplier != 0) {
+        driveMotors.l_motor_write(adjRotValue - adjTransValue * transMultiplier);
+        driveMotors.r_motor_write(adjRotValue + adjTransValue * transMultiplier);
       } else {
         driveMotors.set_both_motors((adjRotValue));
       } 
