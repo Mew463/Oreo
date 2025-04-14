@@ -63,15 +63,15 @@ void setup()
  
 void loop()
 {
-  if (!laptop.isConnected() || laptop_packetBuffer[0] == '1') { // Turn off high powered leds if not meltying
+  if (!laptop.isConnected() || laptop_packetBuffer[0] != '1') { // Turn off high powered leds if not meltying
     digitalWrite(RED_LED_TOP, HIGH); 
     digitalWrite(RED_LED_BOT, HIGH);
   }
 
   if (laptop.isConnected()) {
     EVERY_N_MILLIS(50) {
-      myPTs.checkIsFlipped();
-      if (!myPTs.isFlippedResult) { // Not flipped
+      // myPTs.printDebugInfo();
+      if (!myPTs.checkIsFlipped()) { // Not flipped
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
         setLedMode(TOP);

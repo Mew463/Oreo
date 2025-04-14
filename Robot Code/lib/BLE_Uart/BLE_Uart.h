@@ -12,5 +12,14 @@ class BLE_Uart {
         void send(float value);
         bool isConnected();
     private:
-        
 };
+
+// enum class ROBOT_MODES {
+//     IDLE = '0',
+//     MELTY = '1',
+//     TANK = '2'
+// };
+
+// class Robot_BLE_Uart : BLE_Uart {
+
+// }
