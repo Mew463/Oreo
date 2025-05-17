@@ -73,3 +73,12 @@ void BLE_Uart::send(float value)
   sprintf(conversionbuffer, "%.2f", value);
   send(conversionbuffer);
  }
+
+ROBOT_MODES Robot_BLE_Uart::getMode() {
+  auto map = RobotModeMap.find(packetBuffer[0]);
+  if (map != RobotModeMap.end()) {
+    return map->second;
+  } else {
+    return ROBOT_MODES::IDLE;
+  }
+}

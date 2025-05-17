@@ -25,7 +25,6 @@ irbeaconcmd = ""
 enabled = 0
 activeBeacon = 1
 lastBeaconRead = millis()
-calibrate_accel = 0
 
 async def bluetooth_receive_handler(BLE_DEVICE):
     global lastBeaconRead

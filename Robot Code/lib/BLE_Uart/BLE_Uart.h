@@ -3,7 +3,7 @@
 #define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
 #include <NimBLEDevice.h>
-
+#include <unordered_map>
 class BLE_Uart {
     public:
         BLE_Uart(char* _packetBuffer, int _packSize);
@@ -14,12 +14,20 @@ class BLE_Uart {
     private:
 };
 
-// enum class ROBOT_MODES {
-//     IDLE = '0',
-//     MELTY = '1',
-//     TANK = '2'
-// };
+enum class ROBOT_MODES {
+    IDLE,
+    MELTY,
+    TANK
+};
 
-// class Robot_BLE_Uart : BLE_Uart {
+static std::unordered_map<char, ROBOT_MODES> RobotModeMap{
+    {'0', ROBOT_MODES::IDLE},
+    {'1', ROBOT_MODES::MELTY},
+    {'2', ROBOT_MODES::TANK}
+};
 
-// }
+class Robot_BLE_Uart : public BLE_Uart {
+    public:
+        Robot_BLE_Uart(char* _packetBuffer, int _packSize) : BLE_Uart(_packetBuffer, _packSize) {};
+        ROBOT_MODES getMode();
+};

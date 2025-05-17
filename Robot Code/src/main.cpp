@@ -16,12 +16,13 @@ char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
 bool wasMeltying = false;
 int slowDownSpeed = 200;
-BLE_Uart laptop = BLE_Uart(laptop_packetBuffer, packSize);
+Robot_BLE_Uart transmitter = Robot_BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGHT_MOTOR_PIN, RIGHT_MOTOR_CHANNEL);
 robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
 database_handler motor_settings = database_handler();
 
 melty oreo = melty(TOP_IR_PIN, BOTTOM_IR_PIN);
+
 struct melty_parameters {
   int rot;
   int tra;
@@ -54,7 +55,7 @@ void setup()
   digitalWrite(RED_LED_TOP, HIGH);
   
   driveMotors.arm_motors();
-  laptop.init_ble("Oreo");
+  transmitter.init_ble("Oreo");
   setLeds(BLACK); 
   
   delay(250); // Power up delay for the Serial
@@ -63,12 +64,12 @@ void setup()
  
 void loop()
 {
-  if (!laptop.isConnected() || laptop_packetBuffer[0] != '1') { // Turn off high powered leds if not meltying
+  if (!transmitter.isConnected() || laptop_packetBuffer[0] != '1') { // Turn off high powered leds if not meltying
     digitalWrite(RED_LED_TOP, HIGH); 
     digitalWrite(RED_LED_BOT, HIGH);
   }
 
-  if (laptop.isConnected()) {
+  if (transmitter.isConnected()) {
     EVERY_N_MILLIS(50) {
       // myPTs.printDebugInfo();
       if (!myPTs.checkIsFlipped()) { // Not flipped
@@ -103,7 +104,7 @@ void loop()
     }
 
  
-    if (laptop_packetBuffer[0] == '1') { // Currently enabled and meltybraining!!!
+    if (transmitter.getMode() == ROBOT_MODES::MELTY) { // Currently enabled and meltybraining!!!
       setLedMode(BOTH);
       setLeds(BLACK);
       if (oreo.update()) { // If seen the LED
@@ -112,7 +113,7 @@ void loop()
         else  
           digitalWrite(RED_LED_BOT, LOW);
         EVERY_N_MILLIS(250) {
-          laptop.send("seen");
+          transmitter.send("seen");
         }
 
       } else {
@@ -155,7 +156,7 @@ void loop()
 
       EVERY_N_SECONDS(1) { // DEBUGGIN!!!!
         String msg = "RPM : " + String(oreo.ledRPM);
-        laptop.send(msg);
+        transmitter.send(msg);
       }
 
       EVERY_N_MILLIS(100) {
@@ -182,7 +183,7 @@ void loop()
 
         if (laptop_packetBuffer[2] != '0') {
           String msg = "rotpwr : " + String(melty_parameters.rot) + " tranpwr : " + String(melty_parameters.tra) + " perc : " + String(melty_parameters.per);
-          laptop.send(msg);
+          transmitter.send(msg);
 
           motor_settings.storeMeltyParameters(melty_parameters.rot, melty_parameters.tra, melty_parameters.per, melty_parameters.boost);
         }
@@ -190,7 +191,7 @@ void loop()
 
       wasMeltying = 1;
 
-    } else if (laptop_packetBuffer[0] == '2') { // Tank driving mode!
+    } else if (transmitter.getMode() == ROBOT_MODES::TANK) { // Tank driving mode!
       
       int lmotorpwr = 0;
       int rmotorpwr = 0;
@@ -257,7 +258,7 @@ void loop()
 
         if (laptop_packetBuffer[2] != '0') {
           String msg = "drivpwr : " + String(tank_drive_parameters.drive) + " turnpwr : " + String(tank_drive_parameters.turn);
-          laptop.send(msg);
+          transmitter.send(msg);
 
           motor_settings.storeTankParameters(tank_drive_parameters.drive, tank_drive_parameters.turn, tank_drive_parameters.boost);
         }
@@ -267,12 +268,12 @@ void loop()
       driveMotors.r_motor_write(rmotorpwr);
       toggleLeds(WHITE, BLACK, 500);
     
-    } else { // Currently DISABLED
+    } else if (transmitter.getMode() == ROBOT_MODES::IDLE ){ // Currently DISABLED
       toggleLeds(RED, GREEN, 500);
       driveMotors.set_both_motors(0); 
 
       EVERY_N_SECONDS(1) {
-        laptop.send("SOC: " + String(get3sSOC(BAT_PIN)) + " %");
+        transmitter.send("SOC: " + String(get3sSOC(BAT_PIN)) + " %");
       }
     }
   } else { // Currently DISCONNECTED
