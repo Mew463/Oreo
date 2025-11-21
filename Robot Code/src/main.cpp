@@ -14,8 +14,6 @@
 const int packSize = 6;
 char laptop_packetBuffer[packSize] = {'0', '0', '0', '0', '0', '0'};
 const int headings[] = {0, 45, 90, 135, 180, 225, 270, 315};
-bool wasMeltying = false;
-int slowDownSpeed = 200;
 Robot_BLE_Uart transmitter = Robot_BLE_Uart(laptop_packetBuffer, packSize);
 Drive_Motors driveMotors = Drive_Motors(LEFT_MOTOR_PIN, LEFT_MOTOR_CHANNEL, RIGHT_MOTOR_PIN, RIGHT_MOTOR_CHANNEL);
 robotOrientation myPTs = robotOrientation(TOP_PHOTO_TRANSISTOR, BOTTOM_PHOTO_TRANSISTOR);
@@ -51,8 +49,8 @@ void setup()
   
   pinMode(RED_LED_BOT, OUTPUT);
   pinMode(RED_LED_TOP, OUTPUT);
-  digitalWrite(RED_LED_BOT, HIGH);
-  digitalWrite(RED_LED_TOP, HIGH);
+  digitalWrite(RED_LED_BOT, LOW);
+  digitalWrite(RED_LED_TOP, LOW);
   
   driveMotors.arm_motors();
   transmitter.init_ble("Oreo");
@@ -65,13 +63,13 @@ void setup()
 void loop()
 {
   if (!transmitter.isConnected() || laptop_packetBuffer[0] != '1') { // Turn off high powered leds if not meltying
-    digitalWrite(RED_LED_TOP, HIGH); 
-    digitalWrite(RED_LED_BOT, HIGH);
+    digitalWrite(RED_LED_TOP, LOW); 
+    digitalWrite(RED_LED_BOT, LOW);
   }
 
   if (transmitter.isConnected()) {
     EVERY_N_MILLIS(50) {
-      // myPTs.printDebugInfo();
+      myPTs.printDebugInfo();
       if (!myPTs.checkIsFlipped()) { // Not flipped
         oreo.useTopIr = 1;
         driveMotors.flip_motors = 0;
@@ -109,16 +107,16 @@ void loop()
       setLeds(BLACK);
       if (oreo.update()) { // If seen the LED
         if (oreo.useTopIr)
-          digitalWrite(RED_LED_TOP, LOW);
+          digitalWrite(RED_LED_TOP, HIGH);
         else  
-          digitalWrite(RED_LED_BOT, LOW);
+          digitalWrite(RED_LED_BOT, HIGH);
         EVERY_N_MILLIS(250) {
           transmitter.send("seen");
         }
 
       } else {
-        digitalWrite(RED_LED_TOP, HIGH); 
-        digitalWrite(RED_LED_BOT, HIGH);
+        digitalWrite(RED_LED_TOP, LOW); 
+        digitalWrite(RED_LED_BOT, LOW);
       }
 
       int boostVal = 0;
@@ -188,8 +186,6 @@ void loop()
           motor_settings.storeMeltyParameters(melty_parameters.rot, melty_parameters.tra, melty_parameters.per, melty_parameters.boost);
         }
       }
-
-      wasMeltying = 1;
 
     } else if (transmitter.getMode() == ROBOT_MODES::TANK) { // Tank driving mode!
       

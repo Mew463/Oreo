@@ -33,16 +33,18 @@ class robotOrientation{
   bool checkIsFlipped() {
     topPhotoRingBuf.update(analogRead(topPin));
     bottomPhotoRingBuf.update(analogRead(bottomPin));
+    const int deltaVal = 1;
+    if (bottomPhotoRingBuf.getMaxVal() - topPhotoRingBuf.getMaxVal() > deltaVal)
+      curIsFlipped = 1;
+    if (topPhotoRingBuf.getMaxVal() - bottomPhotoRingBuf.getMaxVal() > deltaVal)
+      curIsFlipped = 0;
 
-    curIsFlipped = bottomPhotoRingBuf.getMaxVal() - topPhotoRingBuf.getMaxVal() > 0 ? 1 : 0;
-    
-    if (curIsFlipped == 1 && lastIsFlipped == 0)
+    if (curIsFlipped != lastIsFlipped)
       lastTransition = millis();
+
     if (curIsFlipped == 1 && millis() - lastTransition > delayTimeMS)
       isFlippedResult = 1;
 
-    if (curIsFlipped == 0 && lastIsFlipped == 1) 
-      lastTransition = millis();
     if (curIsFlipped == 0 && millis() - lastTransition > delayTimeMS)
       isFlippedResult = 0;
 

@@ -12,7 +12,7 @@ def millis():
 
 ir_beacon_2 = BLE_UART(peripheral_name='Beac 2', address = '9AC0FFF3-446C-1A64-DA89-1376064B2BA1')
 ir_beacon_1 = BLE_UART(peripheral_name='Beac 1', address = 'DBA047A7-4143-45D5-E469-FEEA2E354502')
-oreo = BLE_UART(peripheral_name='Oreo', address = '1932D032-A476-F238-07F0-A39D5208BC73')
+oreo = BLE_UART(peripheral_name='Oreo', address = '07C80925-7C0F-1236-FB54-CFC3912A3B9D')
 bt_devices = {ir_beacon_2, ir_beacon_1, oreo}
 # hockey_puck = BLE_UART(peripheral_name='Hockey Puck', address = '07C80925-7C0F-1236-FB54-CFC3912A3B9D') 
 
